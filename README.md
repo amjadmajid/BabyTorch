@@ -1,5 +1,7 @@
-<div align="center"> <img alt="BabyTorch Logo" src="/images/babyTorchLogo.jpg"></div>
-<div style="text-align:center; font-size:2em; font-weight:bold;"> A Minimalist Educational Deep Learning Framework with Similar API to PyTorch </div>
+<div align="center"> <img alt="BabyTorch Logo" src="/images/babyTorchLogo.jpg">
+<h2> A Minimalist Educational Deep Learning Framework with Similar API to PyTorch </h2>
+</div>
+
 
 ## Introduction
 BabyTorch is a lightweight, educational deep learning framework inspired by PyTorch. It's designed to offer a similar API to PyTorch, but with a minimal implementation. This simplicity makes it an excellent tool for learning and experimenting with deep learning concepts. The framework is structured to be easily understandable and modifiable, making it perfect for educational purposes.
@@ -51,9 +53,6 @@ These tests provide practical examples of implementing and using various compone
 
 ## Contributing
 We welcome contributions to __BabyTorch. It is in an early development stage__. If you're interested in improving BabyTorch or adding new features, please check `TODO.md` for upcoming tasks or propose your own ideas.
-
-
----
 
 ## BabyTorch Architecture Design
 
