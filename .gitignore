@@ -1,0 +1,5 @@
+BabyTorch_venv/ 
+BabyTorch.egg-info/
+__pycache__/
+# Jupyter Notebook
+.ipynb_checkpoints
