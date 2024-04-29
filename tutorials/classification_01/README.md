@@ -1,17 +1,17 @@
-### Exploring Classification with BabyTorch: A Step-by-Step Guide
+## Exploring Classification with BabyTorch: A Step-by-Step Guide
 
 **Learn with BabyTorch and remove the word "Baby" to transition to PyTorch!**
 
-#### Introduction to BabyTorch
+### Introduction to BabyTorch
 This tutorial introduces you to a basic classification task using BabyTorch, using the `make_moons` dataset from `sklearn` to demonstrate _binary classification_.
 <div>
 <img style="  display: block; margin-left: auto; margin-right: auto;" src="assets/make_moons.png" >
 </div>
 
-#### Installation
+### Installation
 Ensure that BabyTorch and the required dependencies (`numpy`, `matplotlib` and `sklearn`  for data manipulation, visualization, and datasets generation, respectively) are installed. If BabyTorch is _not_ installed, follow this <a target="_blank" href="/README.md"> guide </a> to install it. The `numpy` and `matplotlib` will be automatically installed with BabyTorch and you can install `sklearn` using `pip install scikit-learn`.
 
-#### Building the Classification Model
+### Building the Classification Model
 Here’s a breakdown of the process to build and train a model for classifying the `make_moons` dataset:
 
 1. **Generate and Prepare Data**: 
@@ -81,10 +81,10 @@ Here’s a breakdown of the process to build and train a model for classifying t
       plt.ylim(yy.min(), yy.max())
       plt.show()
 
-#### Conclusion
+### Conclusion
 Using BabyTorch for a simple classification task not only helps solidify fundamental concepts in neural networks but also prepares you for more complex tasks in deep learning. By following this guide, you can build a foundational understanding of how models learn and how to manipulate data effectively.
 
 This introduction to using BabyTorch for a binary classification task provides the groundwork for more advanced studies and applications in deep learning.
 
-#### Code 
+### Code 
 The complete code for this tutorial can be found [here](classification_01.py).
