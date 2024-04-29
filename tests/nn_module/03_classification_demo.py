@@ -15,7 +15,7 @@ def clip_gradients_norm(parameters, max_norm):
             p.grad *= scale
 
 # Hyperparameters
-num_iterations = 5000
+num_iterations = 8000
 learning_rate = 0.01
 
 # Generate dataset
@@ -48,7 +48,7 @@ for epoch in range(num_iterations):
     # scheduler.step(k)
     model.zero_grad()
     losses.append(loss.data)
-    # print(f"Epoch{epoch}, lr={optimizer.learning_rate}, loss={loss.data}")
+    # print(f"Epoch{epoch+1}/{num_iterations}, lr={optimizer.learning_rate}, loss={loss.data}")
 
 # Plot the loss
 Grapher().plot_loss(losses)
