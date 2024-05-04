@@ -34,7 +34,7 @@ criterion = CrossEntropyLoss()
 losses = []
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(train_loader):
-        images = Tensor(images.reshape(-1, input_size), require_grad=True)
+        images = Tensor(images.reshape(-1, input_size), requires_grad=True)
 
         # Forward and backward passes
         predictions = model(images)

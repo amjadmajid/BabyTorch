@@ -15,9 +15,9 @@ class no_grad:
         NO_GRAD_CONTEXT = self.previous_value
 
 class Tensor:
-    def __init__(self, data, require_grad=False, dtype=numpy.float32, label="", _op_label=""):
+    def __init__(self, data, requires_grad=False, dtype=numpy.float32, label="", _op_label=""):
         self.data = numpy.array(data, dtype=dtype)
-        self.require_grad = require_grad
+        self.requires_grad = requires_grad
         self.grad = None
         self.operation = None
         self.label = label
@@ -35,8 +35,8 @@ class Tensor:
         self.grad = state['grad']
 
     @staticmethod
-    def to_tensor(np_array, require_grad=False):
-        return Tensor(np_array, require_grad=require_grad)
+    def to_tensor(np_array, requires_grad=False):
+        return Tensor(np_array, requires_grad=requires_grad)
 
     def _ensure_same_shape(self, other):
         assert self.data.shape == other.data.shape, "Shape mismatch. Both tensors should have the same shape."
@@ -47,18 +47,18 @@ class Tensor:
 
     def reshape(self, *new_shape):
         reshape_op = ReshapeOperation(self, *new_shape)
-        require_grad = self.require_grad and not NO_GRAD_CONTEXT
+        requires_grad = self.requires_grad and not NO_GRAD_CONTEXT
         output_tensor = Tensor(data=reshape_op.forward(), \
-                               require_grad=require_grad, _op_label="reshape")
-        if output_tensor.require_grad:
+                               requires_grad=requires_grad, _op_label="reshape")
+        if output_tensor.requires_grad:
             output_tensor.operation = reshape_op
         return output_tensor
 
     def transpose(self):
         transpose_op = TransposeOperation()
         result = transpose_op.forward(self)
-        output_tensor = Tensor(result, require_grad=self.require_grad and not NO_GRAD_CONTEXT, _op_label="T")
-        if output_tensor.require_grad:
+        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT, _op_label="T")
+        if output_tensor.requires_grad:
             output_tensor.operation = transpose_op
         return output_tensor
     
@@ -66,10 +66,10 @@ class Tensor:
         max_op = MaxOperation()
         result = max_op.forward(self, axis, keepdims)
         
-        require_grad = self.require_grad and not NO_GRAD_CONTEXT
-        output_tensor = Tensor(result, require_grad=require_grad, _op_label="max")
+        requires_grad = self.requires_grad and not NO_GRAD_CONTEXT
+        output_tensor = Tensor(result, requires_grad=requires_grad, _op_label="max")
         
-        if output_tensor.require_grad:
+        if output_tensor.requires_grad:
             output_tensor.operation = max_op
         
         return output_tensor
@@ -80,9 +80,9 @@ class Tensor:
 
         add_op = AddOperation()
         result = add_op.forward(self, other)
-        require_grad = (self.require_grad or other.require_grad) and not NO_GRAD_CONTEXT
-        output_tensor = Tensor(result, require_grad=require_grad, _op_label="+")
-        if require_grad:
+        requires_grad = (self.requires_grad or other.requires_grad) and not NO_GRAD_CONTEXT
+        output_tensor = Tensor(result, requires_grad=requires_grad, _op_label="+")
+        if requires_grad:
             output_tensor.operation = add_op
         return output_tensor
     
@@ -95,9 +95,9 @@ class Tensor:
 
         subtract_op = SubOperation()
         result = subtract_op.forward(self, other)
-        require_grad = (self.require_grad or other.require_grad) and not NO_GRAD_CONTEXT
-        output_tensor = Tensor(result, require_grad=require_grad, _op_label="-")
-        if require_grad:
+        requires_grad = (self.requires_grad or other.requires_grad) and not NO_GRAD_CONTEXT
+        output_tensor = Tensor(result, requires_grad=requires_grad, _op_label="-")
+        if requires_grad:
             output_tensor.operation = subtract_op
         return output_tensor
 
@@ -107,10 +107,10 @@ class Tensor:
     def sum(self, axis=None, keepdims=False):
         sum_op = SumOperation()
         result = sum_op.forward(self, axis=axis, keepdims=keepdims)
-        require_grad = self.require_grad and not NO_GRAD_CONTEXT
-        output_tensor = Tensor(result, require_grad=require_grad, _op_label="sum")
+        requires_grad = self.requires_grad and not NO_GRAD_CONTEXT
+        output_tensor = Tensor(result, requires_grad=requires_grad, _op_label="sum")
 
-        if require_grad:
+        if requires_grad:
             output_tensor.operation = sum_op
 
         return output_tensor
@@ -121,9 +121,9 @@ class Tensor:
 
         mul_op = MulOperation()
         result = mul_op.forward(self, other)
-        require_grad = (self.require_grad or other.require_grad) and not NO_GRAD_CONTEXT
-        output_tensor = Tensor(result, require_grad=require_grad, _op_label="*")
-        if output_tensor.require_grad:
+        requires_grad = (self.requires_grad or other.requires_grad) and not NO_GRAD_CONTEXT
+        output_tensor = Tensor(result, requires_grad=requires_grad, _op_label="*")
+        if output_tensor.requires_grad:
             output_tensor.operation = mul_op
         return output_tensor
 
@@ -135,8 +135,8 @@ class Tensor:
         matmul_op = MatMulOperation()
         result_tensor.data = matmul_op.forward(self, other)
 
-        if (self.require_grad or other.require_grad) and  not NO_GRAD_CONTEXT:
-            result_tensor.require_grad = True
+        if (self.requires_grad or other.requires_grad) and  not NO_GRAD_CONTEXT:
+            result_tensor.requires_grad = True
             result_tensor.operation = matmul_op
 
         return result_tensor
@@ -147,9 +147,9 @@ class Tensor:
 
         div_op = DivOperation()
         result = div_op.forward(self, other)
-        require_grad = (self.require_grad or other.require_grad) and not NO_GRAD_CONTEXT
-        output_tensor = Tensor(result, require_grad=require_grad, _op_label="/")
-        if require_grad:
+        requires_grad = (self.requires_grad or other.requires_grad) and not NO_GRAD_CONTEXT
+        output_tensor = Tensor(result, requires_grad=requires_grad, _op_label="/")
+        if requires_grad:
             output_tensor.operation = div_op
 
         return output_tensor
@@ -161,58 +161,58 @@ class Tensor:
     def relu(self, alpha=0.00):
         relu_op = RLeUOperation(alpha)
         result = relu_op.forward(self)
-        output_tensor = Tensor(result, require_grad=self.require_grad and not NO_GRAD_CONTEXT, _op_label="relu")
-        if output_tensor.require_grad:
+        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT, _op_label="relu")
+        if output_tensor.requires_grad:
             output_tensor.operation = relu_op
         return output_tensor
 
     def tanh(self):
         tanh_op = TanhOperation()
         result = tanh_op.forward(self)
-        output_tensor = Tensor(result, require_grad=self.require_grad and not NO_GRAD_CONTEXT, _op_label="tanh")
-        if output_tensor.require_grad:
+        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT, _op_label="tanh")
+        if output_tensor.requires_grad:
             output_tensor.operation = tanh_op
         return output_tensor
 
     def sigmoid(self):
         sigmoid_op = SigmoidOperation()
         result = sigmoid_op.forward(self)
-        output_tensor = Tensor(result, require_grad=self.require_grad and not NO_GRAD_CONTEXT, _op_label="sigmoid")
-        if output_tensor.require_grad:
+        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT, _op_label="sigmoid")
+        if output_tensor.requires_grad:
             output_tensor.operation = sigmoid_op
         return output_tensor
 
     def exp(self):
         exp_op = ExpOperation()
         result = exp_op.forward(self)
-        output_tensor = Tensor(result, require_grad=self.require_grad and not NO_GRAD_CONTEXT, _op_label="exp")
-        if output_tensor.require_grad:
+        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT, _op_label="exp")
+        if output_tensor.requires_grad:
             output_tensor.operation = exp_op
             exp_op.input = self
         return output_tensor
 
     def log(self):
         log_op = LogOperation()
-        out = Tensor(data=log_op.forward(self), require_grad=self.require_grad, _op_label="log")
-        if self.require_grad:
-            out.require_grad = True
+        out = Tensor(data=log_op.forward(self), requires_grad=self.requires_grad, _op_label="log")
+        if self.requires_grad:
+            out.requires_grad = True
             out.operation = log_op
         return out
 
     def squeeze(self, axis=None):
         squeeze_op = SqueezeOperation()
         result = squeeze_op.forward(self, axis)
-        output_tensor = Tensor(result, require_grad=self.require_grad and not NO_GRAD_CONTEXT)
-        if output_tensor.require_grad:
+        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT)
+        if output_tensor.requires_grad:
             output_tensor.operation = squeeze_op
         return output_tensor
 
     def unsqueeze(self, axis=None):
         unsqueeze_op = UnsqueezeOperation()
-        require_grad = self.require_grad and not NO_GRAD_CONTEXT
+        requires_grad = self.requires_grad and not NO_GRAD_CONTEXT
         output_tensor = Tensor(data=unsqueeze_op.forward(self, axis), \
-                               require_grad=require_grad, _op_label="unsqueeze")
-        if require_grad:
+                               requires_grad=requires_grad, _op_label="unsqueeze")
+        if requires_grad:
             output_tensor.operation = unsqueeze_op
         return output_tensor
 
@@ -220,30 +220,30 @@ class Tensor:
         if not isinstance(other, Tensor):
             other = Tensor(other)
 
-        require_grad = self.require_grad or other.require_grad and not NO_GRAD_CONTEXT
+        requires_grad = self.requires_grad or other.requires_grad and not NO_GRAD_CONTEXT
         out_op = Conv2DOperationOptim(self, other, stride, padding)
-        out = Tensor(data=out_op.forward(), require_grad=require_grad, _op_label="conv2d")
-        if require_grad:
-            out.require_grad = True
+        out = Tensor(data=out_op.forward(), requires_grad=requires_grad, _op_label="conv2d")
+        if requires_grad:
+            out.requires_grad = True
             out.operation = out_op
         return out
     
     def flatten(self):
-        require_grad = self.require_grad and not NO_GRAD_CONTEXT
+        requires_grad = self.requires_grad and not NO_GRAD_CONTEXT
         out_op = FlattenOperation()
-        out = Tensor(data=out_op.forward(self), require_grad=require_grad, _op_label="conv2d")
-        if require_grad:
-            out.require_grad = True
+        out = Tensor(data=out_op.forward(self), requires_grad=requires_grad, _op_label="conv2d")
+        if requires_grad:
+            out.requires_grad = True
             out.operation = out_op
         return out
     
     def maxpool2d(self, kernel_size, stride):
         maxpool2d_op = MaxPool2DOperation(kernel_size, stride)
-        require_grad = self.require_grad and not NO_GRAD_CONTEXT
+        requires_grad = self.requires_grad and not NO_GRAD_CONTEXT
         output_tensor = Tensor(data=maxpool2d_op.forward(self.data) , \
-                               require_grad=require_grad, _op_label="maxpool2d")
+                               requires_grad=requires_grad, _op_label="maxpool2d")
         
-        if require_grad:
+        if requires_grad:
             output_tensor.operation = maxpool2d_op
 
         return output_tensor
@@ -256,7 +256,7 @@ class Tensor:
             else: 
                 self.grad = numpy.ones_like(self.data)
 
-        if not self.require_grad:
+        if not self.requires_grad:
             return
         
         topo = []
@@ -279,7 +279,7 @@ class Tensor:
                     grads = (grads,)
 
                 for tensor, tensor_grad in zip(v.operation.inputs(), grads):
-                    if tensor.require_grad:     
+                    if tensor.requires_grad:     
                         if tensor.grad is None:
                             tensor.grad = tensor_grad
                         else:
@@ -293,7 +293,7 @@ class Tensor:
                                 tensor.grad = tensor.grad + tensor_grad
 
     def __repr__(self):
-      return f"Tensor( {str(self.data)},require_grad={self.require_grad})"
+      return f"Tensor( {str(self.data)},requires_grad={self.requires_grad})"
 
     def __iter__(self):
         # TODO: we are returning a numpy iterator here.
@@ -302,9 +302,9 @@ class Tensor:
     def __getitem__(self, indices):
         slice_op = SliceOperation(indices)
         result = slice_op.forward(self)
-        output_tensor = Tensor(result, require_grad=self.require_grad and not NO_GRAD_CONTEXT, _op_label="slice")
+        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT, _op_label="slice")
 
-        if output_tensor.require_grad:
+        if output_tensor.requires_grad:
             output_tensor.operation = slice_op
 
         return output_tensor

@@ -87,4 +87,5 @@ Using BabyTorch for a simple classification task not only helps solidify fundame
 This introduction to using BabyTorch for a binary classification task provides the groundwork for more advanced studies and applications in deep learning.
 
 ### Code 
-The complete code for this tutorial can be found [here](classification_01.py).
+The complete code for this tutorial can be found [here](classification_02.py).
+A more basic example of binary classification with implementation using BabyTorch and PyTorch can be found [here](classification_01.py).

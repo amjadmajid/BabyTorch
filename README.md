@@ -1,5 +1,6 @@
 <div align="center"> <img alt="BabyTorch Logo" src="/images/babyTorchLogo.jpg">
-<h2> A Minimalist Educational Deep Learning Framework with Similar API to PyTorch </h2>
+
+<h3> Look at under the hood, modify core algorithims, and when ready remove the word `baby` to work with PyTorch - <span style="font-style:italic; font-size:20px; font-weight:normal">BabyTorch's vision</span> </h3>
 </div>
 
 
@@ -38,15 +39,22 @@ BabyTorch includes the following modules, mirroring the structure of PyTorch:
 ## Example Usage
 Below are some examples of how to use BabyTorch, which also serve as basic tests:
 
-1. **Neural Network Module Tests**:
-   - Basic neural network operations: `tests/nn_module/nn_basic.py`
-   - MNIST classification demo: `tests/nn_module/05_classification_mnist.py`
-
-2. **Tensor Tests**:
+1. **Classification Examples**:
+   - [Basic binary classification](tutorials/classification/binary_classification/README.md)
+   - [Simple Multi-class classification demo]([tutorials/classification/multi-class_classification/simple_multi-class_classification/multi_class_classification_CrossEntropyLoss.py])
+   - [MNIST classification using linear and convolution layers](tutorials/classification/multi-class_classification/mnist_digits_classification/README.md)
+  
+2. **Regression Examples**:
+   - [Simple Linear Regression](tutorials/regression/README.md)
+ 
+3. **Tensor Tests**:
+   - [Mathematical operations](tests/tensor_tests/math_operations/add_mul_tests.py)
+   - [Martix multiplication with broadcasting](tests/tensor_operations/math_operations/matrix_multiplication_with_broadcasting.py)
    - Iterability and subscription tests: `tests/tensor_tests/iteration_subscribtion/iterablility_subscribtion_tests.py`
-   - Mathematical operations: `tests/tensor_tests/math_operations/add_mul_tests.py`
+   - 
+   
 
-3. **Visualization Tests**:
+4. **Visualization Tests**:
    - Graph visualization: `tests/visualization_tests/grapher_test.py`
 
 These tests provide practical examples of implementing and using various components of BabyTorch.

@@ -34,7 +34,7 @@ class CrossEntropyLoss:
 
         # print("predictions: ", predictions)
         # exit()
-        epsilon = Tensor(1e-8, require_grad=True)
+        epsilon = Tensor(1e-8, requires_grad=True)
 
         max_vals = predictions.max(axis=1, keepdims=True)
         # print("max_vals: ", max_vals)
@@ -49,13 +49,13 @@ class CrossEntropyLoss:
 
         # TODO: This is a workaround. Tensor supports indexing with a list of indices, 
         # but not with a Tensor of indices. This must be fixed
-        # selected_probs = Tensor(selected_probs, require_grad=True)
+        # selected_probs = Tensor(selected_probs, requires_grad=True)
 
         # print("selected_probs: ", selected_probs)
         # print("selected_probs: ", selected_probs + epsilon)
         # exit()
         # log_likelihood = (-selected_probs + epsilon).log()
-        neg_tensor = Tensor(-1, require_grad=True)
+        neg_tensor = Tensor(-1, requires_grad=True)
         log_likelihood = (selected_probs + epsilon).log() * neg_tensor
         # print("log_likelihood: ", neg_tensor * log_likelihood)
         # exit()

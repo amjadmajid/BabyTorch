@@ -1,71 +1,88 @@
+import babytorch.nn as b_nn
+from babytorch.nn import MSELoss
+from babytorch.optim import SGD 
+from babytorch import Tensor
+from babytorch import Grapher
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.datasets import make_circles, make_moons
-from babytorch import Tensor, Grapher
-import babytorch.nn as nn
-from babytorch.nn import Sequential, MSELoss
-from babytorch.optim import SGD
 
-def clip_gradients_norm(parameters, max_norm):
-    """Clips the gradients of the model parameters."""
-    total_norm = np.sqrt(sum(np.sum(np.square(p.grad)) for p in parameters))
-    scale = max_norm / (total_norm + 1e-6)
-    if total_norm > max_norm:
-        for p in parameters:
-            p.grad *= scale
+def babytorch_classification(input, target, num_iterations=1000, lr=0.001):
+    print("babytorch_classification")
+    model = b_nn.Sequential(
+            b_nn.Linear(len(input_data[-1]), 4, b_nn.Sigmoid()), 
+            b_nn.Linear(4, 1))
 
-# Hyperparameters
-num_iterations = 8000
-learning_rate = 0.01
+    mse = MSELoss()
+    optimizer = SGD(model.parameters(), learning_rate=lr)
 
-# Generate dataset
-# X_orig, y_orig = make_circles(n_samples=200, noise=0.1)
-X_orig, y_orig = make_moons(n_samples=200, noise=0.1)
-y_orig = y_orig * 2 - 1  # Convert y to -1 or 1
-X = Tensor(X_orig, require_grad=True)
-y = Tensor(y_orig, require_grad=True)
-y = y.reshape(-1, 1)
+    losses=[]
+    # compute the output of the MLP model
+    for i in range(num_iterations):
+        model.zero_grad()
+        y_pred =  model(input)  
+        loss = mse(y_pred, target)
+        loss.backward()
+        optimizer.step()
 
-# Initialize the model
-model = Sequential(
-    nn.Linear(2, 64, nn.ReLU()),
-    nn.Linear(64, 32, nn.ReLU()),
-    nn.Linear(32, 16, nn.ReLU()),
-    nn.Linear(16, 1)
-)
-optimizer = SGD(model.parameters(), learning_rate=learning_rate, weight_decay=0.0005)
-# scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: lr - lr * 0.9 * (epoch+1) / (num_iterations+1))
-criterion = MSELoss()
+        losses.append(loss.data)
+        # print(f"{num_iterations+1} - babytorch loss: {loss.data}")
+    return  y_pred, losses
 
-# Training loop
-losses = []
-for epoch in range(num_iterations):
-    y_pred = model(X)
-    loss = criterion(y_pred, y)
-    loss.backward()
-    clip_gradients_norm(model.parameters(), max_norm=10.0)
-    optimizer.step()
-    # scheduler.step(k)
-    model.zero_grad()
-    losses.append(loss.data)
-    # print(f"Epoch{epoch+1}/{num_iterations}, lr={optimizer.learning_rate}, loss={loss.data}")
+# ----------------PyTorch----------------
+def pytorch_classification(input, target, num_iterations=1000, lr=0.001):
+    print("pytorch_classification")
+    torch_model = nn.Sequential(
+        nn.Linear(len(input_data[-1]), 4), # Input layer to hidden layer 1
+        nn.Sigmoid(),       # Activation for hidden layer 1
+        nn.Linear(4, 1)  # Hidden layer 2 to output layer
+    )
 
-# Plot the loss
-Grapher().plot_loss(losses)
-Grapher().show()
+    criterion = nn.MSELoss()
+    optimizer = optim.SGD(torch_model.parameters(), lr=lr)
 
-# Visualize the decision boundary
-h = 0.25
-x_min, x_max = X_orig[:, 0].min() - 1, X_orig[:, 0].max() + 1
-y_min, y_max = X_orig[:, 1].min() - 1, X_orig[:, 1].max() + 1
-xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-Xmesh = np.c_[xx.ravel(), yy.ravel()]
-scores = model(Tensor(Xmesh))
-Z = np.array([s > 0 for s in scores])
-Z = Z.reshape(xx.shape)
+    losses = []
+    for i in range(num_iterations):
+        optimizer.zero_grad()  # Reset gradients
+        y_pred = torch_model(input)
+        loss = criterion(y_pred, target)
+        loss.backward()
+        optimizer.step()  # Update parameters
+        losses.append(loss.item())
+        # print(f"{i+1} - Pytorch loss: {loss.data}")
 
-plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral, alpha=0.8)
-plt.scatter(X_orig[:, 0], X_orig[:, 1], c=y_orig, s=40, cmap=plt.cm.Spectral)
-plt.xlim(xx.min(), xx.max())
-plt.ylim(yy.min(), yy.max())
-plt.show()
+    return  y_pred.cpu().detach().numpy() , losses
+
+if __name__ == '__main__':
+    input_data = np.array( [[1, 1,-1], 
+                            [1, 1, 1], 
+                            [1,-1,-1], 
+                            [1,-1, 1], 
+                            ])
+
+    # generally the target shape should match the output shape of the model (batch_size, output_size)
+    target = np.array( [ [1], [-1], [-1], [-1] ] ) 
+
+    t_x = Tensor(input_data )
+    t_y = Tensor(target )
+    p_x = torch.tensor( input_data, dtype=torch.float32 )
+    p_y = torch.tensor( target, dtype=torch.float32 )
+
+    pytorch_y_pred, pytorch_losses =  pytorch_classification(p_x, p_y, num_iterations=10000)
+    babytorch_y_pred, babytorch_losses = babytorch_classification(input=t_x, target=t_y, num_iterations=10000)
+
+    print("Predictions vs True Labels:")
+    print(f"babytorch Prediction |  Pytorch Prediction:| True value ")
+    # print(f"{babytorch_y_pred.data=}, {pytorch_y_pred=}, {target=}")
+    for t_pred, p_pred, true in zip(babytorch_y_pred.data, pytorch_y_pred ,target ):      
+        print(f"  {t_pred[0] :9.4f}         | {p_pred[0]:10.4f}          | {true[0]:2.4f}")
+
+    #  Plot the loss
+    G = Grapher()
+    # G.show_graph(loss)
+    G.plot_loss(pytorch_losses, label='PyTorch')
+    G.plot_loss(babytorch_losses, label='babytorch')
+    G.show()
+

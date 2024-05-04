@@ -40,7 +40,7 @@ if babytorch:
     losses = []
     for epoch in range(num_epochs):
         for i, (images, labels) in enumerate(train_loader):
-            images = Tensor(images.reshape(-1, 1, 28, 28), require_grad=True)  # Add channel dimension
+            images = Tensor(images.reshape(-1, 1, 28, 28), requires_grad=True)  # Add channel dimension
 
             # Forward and backward passes
             predictions = model(images)
