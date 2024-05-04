@@ -3,7 +3,7 @@ import subprocess
 import struct
 import numpy as np
 
-def download_mnist(data_dir='mnist_data'):
+def download_mnist(data_dir='./mnist_data'):
     original_dir = os.getcwd()  # Save the current directory
 
     if not os.path.exists(data_dir):
@@ -24,6 +24,7 @@ def download_mnist(data_dir='mnist_data'):
     # Check if files have already been downloaded
     if all([os.path.exists(os.path.join(data_dir, fname)) for fname in filenames]):
         print("MNIST data already downloaded.")
+        os.chdir(original_dir) # Revert back to the original directory
         return  # Exit the function
 
     # Download the files
@@ -64,8 +65,6 @@ def load_mnist(path, kind='train'):
     
     return images, labels
 
-
-
 class MNISTDataset:
     def __init__(self, root='./mnist_data', train=True, transform=None, download=False):
         self.data_dir = os.path.abspath(root)  # Get absolute path
@@ -98,12 +97,17 @@ class MNISTDataset:
         ]
 
         missing_files = [f for f in expected_files if not os.path.exists(os.path.join(self.data_dir, f))]
+        
+        # for f in expected_files:
+        #     print(os.path.join(self.data_dir, f))
 
         if missing_files:
             print(f"Warning: Missing files in {self.data_dir} - {', '.join(missing_files)}")
             raise FileNotFoundError(f"Expected MNIST files not found: {', '.join(missing_files)}")
         else:
             print(f"All expected MNIST files are present in {self.data_dir}")
+
+        # exit()
 
     def __len__(self):
         return len(self.data)
