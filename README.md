@@ -41,7 +41,7 @@ Below are some examples of how to use BabyTorch, which also serve as basic tests
 
 1. **Classification Examples**:
    - [Basic binary classification](tutorials/classification/binary_classification/README.md)
-   - [Simple Multi-class classification demo]([tutorials/classification/multi-class_classification/simple_multi-class_classification/README.md])
+   - [Simple Multi-class classification demo](tutorials/classification/multi-class_classification/simple_multi-class_classification/README.md)
    - [MNIST classification using linear and convolution layers](tutorials/classification/multi-class_classification/mnist_digits_classification/README.md)
   
 2. **Regression Examples**:
