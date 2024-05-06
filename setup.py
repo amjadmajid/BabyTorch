@@ -14,7 +14,7 @@ setup(
     url="https://github.com/amjadmajid/BabyTorch",
     packages=find_packages(),
     install_requires=[
-        'numpy',
+        'cupy',
         'graphviz',
         'matplotlib',
     ],

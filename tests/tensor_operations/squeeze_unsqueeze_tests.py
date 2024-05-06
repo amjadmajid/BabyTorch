@@ -1,14 +1,14 @@
 import unittest
 from babytorch import Tensor
 import torch
-import numpy as np
+import cupy as cp
 
 
 class TestTensorOperations(unittest.TestCase):
         
     #------------------ Squeeze ------------------#
     def test_vector_squeeze(self):
-        vec = np.array([[1.0], [-2.0], [3.0]])
+        vec = cp.array([[1.0], [-2.0], [3.0]])
 
         # babytorch's Tensor
         a_t = Tensor(vec, requires_grad=True)
@@ -20,8 +20,8 @@ class TestTensorOperations(unittest.TestCase):
         b_p = a_p.squeeze()
         b_p.sum().backward()
 
-        self.assertTrue(np.array_equal(b_t.data, b_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.data, b_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
         print("Vector Squeeze test passed!")
 
         if print_output:
@@ -66,8 +66,8 @@ class TestTensorOperations(unittest.TestCase):
         b_p = a_p.unsqueeze(1)
         b_p.sum().backward()
 
-        self.assertTrue(np.array_equal(b_t.data, b_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.data, b_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
         print("Vector Unsqueeze test passed!")
 
         if print_output:

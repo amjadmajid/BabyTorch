@@ -1,4 +1,4 @@
-import numpy
+import cupy as cp
 from .operations import * 
 
 NO_GRAD_CONTEXT = False
@@ -15,8 +15,8 @@ class no_grad:
         NO_GRAD_CONTEXT = self.previous_value
 
 class Tensor:
-    def __init__(self, data, requires_grad=False, dtype=numpy.float32, label="", _op_label=""):
-        self.data = numpy.array(data, dtype=dtype)
+    def __init__(self, data, requires_grad=False, dtype=cp.float32, label="", _op_label=""):
+        self.data = cp.array(data, dtype=dtype)
         self.requires_grad = requires_grad
         self.grad = None
         self.operation = None
@@ -131,7 +131,7 @@ class Tensor:
         if not isinstance(other, Tensor):
             other = Tensor(other)
 
-        result_tensor = Tensor(numpy.empty_like(self.data))  
+        result_tensor = Tensor(cp.empty_like(self.data))  
         matmul_op = MatMulOperation()
         result_tensor.data = matmul_op.forward(self, other)
 
@@ -251,10 +251,10 @@ class Tensor:
     def backward(self, grad=None):
         if self.grad is None:
             if grad is not None:
-                assert numpy.isscalar(grad), "The gradient passed to backward() must be a scalar."
-                self.grad = numpy.array(grad, dtype=self.data.dtype)
+                assert cp.isscalar(grad), "The gradient passed to backward() must be a scalar."
+                self.grad = cp.array(grad, dtype=self.data.dtype)
             else: 
-                self.grad = numpy.ones_like(self.data)
+                self.grad = cp.ones_like(self.data)
 
         if not self.requires_grad:
             return

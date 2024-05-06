@@ -1,7 +1,7 @@
 import unittest
 from  babytorch import Tensor
 import torch
-import numpy as np
+import cupy as cp
 
 
 class TestTensorOperations(unittest.TestCase):
@@ -44,8 +44,8 @@ class TestTensorOperations(unittest.TestCase):
         b_p.sum().backward()
 
         # Check equivalence
-        self.assertTrue(np.array_equal(b_t.data, b_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.data, b_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
         print("Vector ReLU test passed!")
 
         if print_output:
@@ -65,8 +65,8 @@ class TestTensorOperations(unittest.TestCase):
         b_p = torch.nn.functional.relu(a_p)
         b_p.sum().backward()
         
-        self.assertTrue(np.array_equal(b_t.data, b_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.data, b_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
         print("Matrix ReLU test passed!")
 
         if print_output:
@@ -113,8 +113,8 @@ class TestTensorOperations(unittest.TestCase):
         b_p.sum().backward()
 
         # Check equivalence
-        self.assertTrue(np.array_equal(b_t.data, b_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.data, b_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
         print("Vector Tanh test passed!")
 
         if print_output:
@@ -136,8 +136,8 @@ class TestTensorOperations(unittest.TestCase):
         b_p.sum().backward()
         
         # Check equivalence
-        self.assertTrue(np.array_equal(b_t.data, b_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.data, b_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
         print("Matrix Tanh test passed!")
 
         if print_output:
@@ -177,8 +177,8 @@ class TestTensorOperations(unittest.TestCase):
         b_p = torch.exp(a_p)
         b_p.sum().backward()
         
-        self.assertTrue(np.array_equal(b_t.data, b_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.data, b_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
         print("Vector Exp test passed!")
 
         if print_output:
@@ -197,8 +197,8 @@ class TestTensorOperations(unittest.TestCase):
         b_p = torch.exp(a_p)
         b_p.sum().backward()
         
-        self.assertTrue(np.array_equal(b_t.data, b_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.data, b_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
         print("Matrix Exp test passed!")
 
         if print_output:

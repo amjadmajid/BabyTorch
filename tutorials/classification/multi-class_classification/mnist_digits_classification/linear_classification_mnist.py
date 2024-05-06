@@ -1,4 +1,4 @@
-import numpy as np
+import cupy as cp
 from babytorch import no_grad, Tensor
 import babytorch.nn as nn
 from babytorch.nn import Sequential, MSELoss, CrossEntropyLoss
@@ -66,7 +66,7 @@ with no_grad():
     for images, labels in test_loader:
         images = Tensor(images.reshape(-1, input_size))
         outputs = model(images)
-        correct += np.sum(np.argmax(outputs.data, axis=1) == labels)
+        correct += cp.sum(cp.argmax(outputs.data, axis=1) == labels)
         total_samples += batch_size
 
     accuracy = 100 * correct / total_samples

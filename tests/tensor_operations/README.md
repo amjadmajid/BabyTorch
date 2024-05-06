@@ -3,7 +3,7 @@
 This test suite validates the tensor operations implemented in `babytorch` by comparing the results with PyTorch. The tests cover various operations, including addition, multiplication, broadcasting, squeezing and activation functions.
 
 ### Required Libraries:
-  The following libraries must be installed in your environment `babytorch`, `torch`, `numpy`, and `unittest`.
+  The following libraries must be installed in your environment `babytorch`, `torch`, `cupy`, and `unittest`.
 
 
 ### [Addition & Multiplication](add_mul_tests.py)

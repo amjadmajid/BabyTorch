@@ -1,7 +1,7 @@
 import unittest
 from babytorch import Tensor
 import torch
-import numpy as np
+import cupy as cp
 
 
 class TestTensorOperations(unittest.TestCase):
@@ -29,9 +29,9 @@ class TestTensorOperations(unittest.TestCase):
         print(f" {c_p.detach().numpy()=},\n {a_p.grad.numpy()=},\n {b_p.grad.numpy()=}")
 
         # Check equivalence
-        self.assertTrue(np.allclose(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.allclose(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.allclose(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.allclose(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.allclose(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.allclose(b_t.grad, b_p.grad.numpy()))
         # print("Batched matrix multiplication with broadcasting test passed!")
 
 

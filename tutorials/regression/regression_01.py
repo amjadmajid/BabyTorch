@@ -2,11 +2,11 @@
 BABYTORCH = False
 
 import random
-import numpy as np
+import cupy as cp
 from sklearn.datasets import make_regression
 import matplotlib.pyplot as plt
 
-np.random.seed(0)
+cp.random.seed(0)
 random.seed(0)
 
 num_iterations = 2000
@@ -16,7 +16,7 @@ lr =0.1
 x, y = make_regression(n_samples=100, n_features=1, noise=20, random_state=0)
 
 y = (y.reshape(-1, 1) + 1) * .5  # make y be between 0 and 1
-y /= np.max(y)
+y /= cp.max(y)
 print(f"{y[:5]=}")
 
 if BABYTORCH: 
@@ -63,8 +63,8 @@ if BABYTORCH:
         y_predictions = model(x)
 
     # Convert to numpy arrays for easier manipulation
-    x = np.array(x).flatten()
-    y_predictions = np.array(y_predictions).flatten()
+    x = cp.array(x).flatten()
+    y_predictions = cp.array(y_predictions).flatten()
 
 
 else:
@@ -120,7 +120,7 @@ else:
 
 
 # Get the sorted order of x and sort x and y_predictions accordingly
-sorted_order = np.argsort(x)
+sorted_order = cp.argsort(x)
 x_sorted = x[sorted_order]
 y_predictions_sorted = y_predictions[sorted_order]
 

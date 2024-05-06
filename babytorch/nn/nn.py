@@ -1,4 +1,4 @@
-import numpy as np
+import cupy as cp
 from babytorch.engine import Tensor
 import pickle
 
@@ -6,7 +6,7 @@ class Module:
     def zero_grad(self):
         """Zero out the gradients for all parameters."""
         for p in self.parameters():
-            p.grad = np.zeros_like(p.data)
+            p.grad = cp.zeros_like(p.data)
 
     def parameters(self):
         """Return a list of parameters (Tensors) that are trainable."""
@@ -54,8 +54,8 @@ class Sigmoid(Module):
 
 class Linear(Module):
     def __init__(self, in_features, out_features, activation_function=None):
-        self.w = Tensor(np.random.uniform(-0.1, 0.1, (in_features, out_features)), requires_grad=True)
-        self.b = Tensor(np.zeros((1, out_features)), requires_grad=True)
+        self.w = Tensor(cp.random.uniform(-0.1, 0.1, (in_features, out_features)), requires_grad=True)
+        self.b = Tensor(cp.zeros((1, out_features)), requires_grad=True)
         self.activation_function = activation_function
 
     def __call__(self, x):
@@ -84,8 +84,8 @@ class Conv2D(Module):
         self.stride = stride
         self.padding = padding
         
-        self.w = Tensor(np.random.uniform(-0.1, 0.1, (out_channels, in_channels, kernel_size, kernel_size)), requires_grad=True)
-        self.b = Tensor(np.zeros((out_channels,)), requires_grad=True)
+        self.w = Tensor(cp.random.uniform(-0.1, 0.1, (out_channels, in_channels, kernel_size, kernel_size)), requires_grad=True)
+        self.b = Tensor(cp.zeros((out_channels,)), requires_grad=True)
 
     def __call__(self, x):
         return self.forward(x)
@@ -139,7 +139,7 @@ class Sequential(Module):
 # class Module:
 #     def zero_grad(self):
 #         for p in self.parameters():
-#             p.grad = np.zeros_like(p.data)  # Reset gradient using Tensor
+#             p.grad = cp.zeros_like(p.data)  # Reset gradient using Tensor
 
 #     def parameters(self):
 #         return []
@@ -202,8 +202,8 @@ class Sequential(Module):
 #         # self.w and self.b will need to be transposed in the forward pass
 #         # There oder in the initialization will be reversed to achieve this
 #         # without explicity transposition
-#         self.w = Tensor(np.random.uniform(-.1, .1, (in_features, num_neurons)), requires_grad=True)  # Shape: num_neurons x in_features
-#         self.b = Tensor(np.zeros((1, num_neurons)), requires_grad=True)  # Shape: num_neurons x 1
+#         self.w = Tensor(cp.random.uniform(-.1, .1, (in_features, num_neurons)), requires_grad=True)  # Shape: num_neurons x in_features
+#         self.b = Tensor(cp.zeros((1, num_neurons)), requires_grad=True)  # Shape: num_neurons x 1
 #         self.activation_function = activation_function
 
 #     def __call__(self, x):
@@ -251,7 +251,7 @@ class Sequential(Module):
         
 #         # Handle list and tuple input data inputs
 #         if isinstance(x.data, (list, tuple, float, int)):
-#             x.data = np.array(x.data)
+#             x.data = cp.array(x.data)
 
 #         # Convert 1D -> 2D column vector
 #         if len(x.shape) == 1:

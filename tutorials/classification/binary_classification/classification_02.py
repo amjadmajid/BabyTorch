@@ -1,4 +1,4 @@
-import numpy as np
+import cupy as cp
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_circles, make_moons
 from babytorch import Tensor, Grapher
@@ -8,7 +8,7 @@ from babytorch.optim import SGD
 
 def clip_gradients_norm(parameters, max_norm):
     """Clips the gradients of the model parameters."""
-    total_norm = np.sqrt(sum(np.sum(np.square(p.grad)) for p in parameters))
+    total_norm = cp.sqrt(sum(cp.sum(cp.square(p.grad)) for p in parameters))
     scale = max_norm / (total_norm + 1e-6)
     if total_norm > max_norm:
         for p in parameters:
@@ -58,10 +58,10 @@ Grapher().show()
 h = 0.25
 x_min, x_max = X_orig[:, 0].min() - 1, X_orig[:, 0].max() + 1
 y_min, y_max = X_orig[:, 1].min() - 1, X_orig[:, 1].max() + 1
-xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-Xmesh = np.c_[xx.ravel(), yy.ravel()]
+xx, yy = cp.meshgrid(cp.arange(x_min, x_max, h), cp.arange(y_min, y_max, h))
+Xmesh = cp.c_[xx.ravel(), yy.ravel()]
 scores = model(Tensor(Xmesh))
-Z = np.array([s > 0 for s in scores])
+Z = cp.array([s > 0 for s in scores])
 Z = Z.reshape(xx.shape)
 
 plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral, alpha=0.8)

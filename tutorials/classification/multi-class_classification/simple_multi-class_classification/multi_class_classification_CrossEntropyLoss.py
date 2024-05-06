@@ -59,7 +59,7 @@ import babytorch
 from babytorch import Tensor
 import babytorch.nn as nn
 from babytorch.optim import SGD
-import numpy as np
+import cupy as cp
 
 # Dummy data (5 samples, 4 features)
 X = Tensor([
@@ -71,7 +71,7 @@ X = Tensor([
 ])
 
 # Dummy targets (5 samples, 1 label per sample)
-y = Tensor([0, 1, 2, 1, 0], dtype=np.int32) # int is necessary for the CrossEntropyLoss
+y = Tensor([0, 1, 2, 1, 0], dtype=cp.int32) # int is necessary for the CrossEntropyLoss
 
 # Initialize the model using nn.Sequential
 input_dim = 4  # Number of input features

@@ -1,7 +1,7 @@
 import unittest
 from babytorch import Tensor
 import torch
-import numpy as np
+import cupy as cp
 
 
 class TestTensorOperations(unittest.TestCase):
@@ -56,9 +56,9 @@ class TestTensorOperations(unittest.TestCase):
             print()
         
         # Check equivalence
-        self.assertTrue(np.array_equal(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.array_equal(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.grad, b_p.grad.numpy()))
         print("Vector addition test passed!")
 
 
@@ -79,9 +79,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p.sum().backward()
         
         # Check equivalence
-        self.assertTrue(np.array_equal(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.array_equal(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.grad, b_p.grad.numpy()))
         print("Matrix addition test passed!")
 
         if print_output:
@@ -106,9 +106,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p = a_p + b_p
         c_p.sum().backward()
         
-        self.assertTrue(np.array_equal(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(c_t.data, c_p.detach().numpy()))
         self.assertEqual(a_t.grad, a_p.grad.item())
-        self.assertTrue(np.array_equal(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.grad, b_p.grad.numpy()))
         print("Scalar + Vector addition test passed!")
 
         if print_output:
@@ -133,9 +133,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p = a_p + b_p
         c_p.sum().backward()
         
-        self.assertTrue(np.array_equal(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(c_t.data, c_p.detach().numpy()))
         self.assertEqual(a_t.grad, a_p.grad.item())
-        self.assertTrue(np.array_equal(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.grad, b_p.grad.numpy()))
         print("Scalar + Matrix addition test passed!")
 
         if print_output:
@@ -160,9 +160,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p = a_p + b_p
         c_p.sum().backward()
 
-        self.assertTrue(np.allclose(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.allclose(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.allclose(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.allclose(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.allclose(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.allclose(b_t.grad, b_p.grad.numpy()))
         print("Vector + Matrix addition test passed!")
 
         if print_output:
@@ -187,9 +187,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p.sum().backward()
         
         # Check equivalence
-        self.assertTrue(np.array_equal(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.array_equal(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.grad, b_p.grad.numpy()))
         print("Batched matrix addition test passed!")
 
         if print_output:
@@ -214,9 +214,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p.sum().backward()
         
         # Check equivalence
-        self.assertTrue(np.allclose(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.allclose(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.allclose(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.allclose(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.allclose(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.allclose(b_t.grad, b_p.grad.numpy()))
         print("Batched matrix addition with broadcasting test passed!")
 
         if print_output:
@@ -268,9 +268,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p = a_p * b_p
         c_p.sum().backward()
 
-        self.assertTrue(np.array_equal(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.array_equal(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.grad, b_p.grad.numpy()))
         print("Vector multiplication test passed!")
 
         if print_output:
@@ -294,9 +294,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p = a_p * b_p
         c_p.sum().backward()
 
-        self.assertTrue(np.allclose(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.allclose(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.allclose(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.allclose(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.allclose(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.allclose(b_t.grad, b_p.grad.numpy()))
         print("Matrix multiplication test passed!")
 
         if print_output:
@@ -321,9 +321,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p = torch.matmul(a_p, b_p)
         c_p.sum().backward()
 
-        self.assertTrue(np.allclose(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.allclose(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.allclose(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.allclose(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.allclose(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.allclose(b_t.grad, b_p.grad.numpy()))
         print("Matrix (2x3) and Matrix (3x2) multiplication test passed!")
 
         if print_output:
@@ -347,9 +347,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p = torch.matmul(a_p, b_p)
         c_p.sum().backward()
 
-        self.assertTrue(np.array_equal(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.array_equal(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.array_equal(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.array_equal(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.array_equal(b_t.grad, b_p.grad.numpy()))
         print("Matrix (2x3) and Vector (3x1) multiplication test passed!")
 
         if print_output:
@@ -374,9 +374,9 @@ class TestTensorOperations(unittest.TestCase):
         c_p.sum().backward()
         
         # Check equivalence
-        self.assertTrue(np.allclose(c_t.data, c_p.detach().numpy()))
-        self.assertTrue(np.allclose(a_t.grad, a_p.grad.numpy()))
-        self.assertTrue(np.allclose(b_t.grad, b_p.grad.numpy()))
+        self.assertTrue(cp.allclose(c_t.data, c_p.detach().numpy()))
+        self.assertTrue(cp.allclose(a_t.grad, a_p.grad.numpy()))
+        self.assertTrue(cp.allclose(b_t.grad, b_p.grad.numpy()))
         print("Batched matrix multiplication with broadcasting test passed!")
 
         if print_output:

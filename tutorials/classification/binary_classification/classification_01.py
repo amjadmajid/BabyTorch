@@ -7,7 +7,7 @@ from babytorch import Grapher
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
+import cupy as cp
 
 def babytorch_classification(input, target, num_iterations=1000, lr=0.001):
     print("babytorch_classification")
@@ -56,14 +56,14 @@ def pytorch_classification(input, target, num_iterations=1000, lr=0.001):
     return  y_pred.cpu().detach().numpy() , losses
 
 if __name__ == '__main__':
-    input_data = np.array( [[1, 1,-1], 
+    input_data = cp.array( [[1, 1,-1], 
                             [1, 1, 1], 
                             [1,-1,-1], 
                             [1,-1, 1], 
                             ])
 
     # generally the target shape should match the output shape of the model (batch_size, output_size)
-    target = np.array( [ [1], [-1], [-1], [-1] ] ) 
+    target = cp.array( [ [1], [-1], [-1], [-1] ] ) 
 
     t_x = Tensor(input_data )
     t_y = Tensor(target )

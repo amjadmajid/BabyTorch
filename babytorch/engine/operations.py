@@ -1,5 +1,5 @@
 
-import numpy as np 
+import cupy as cp 
 
 class Operation:
     def forward(self):
@@ -91,10 +91,10 @@ class TransposeOperation(Operation):
             Tensor: numpy array.
         """
         self.a = a
-        return np.transpose(a.data)
+        return cp.transpose(a.data)
 
     def backward(self, grad):
-        return np.transpose(grad),
+        return cp.transpose(grad),
 
 class ReshapeOperation(Operation):
     """
@@ -112,9 +112,9 @@ class ReshapeOperation(Operation):
 
     Methods:
     --------
-    forward() -> np.ndarray:
+    forward() -> cp.ndarray:
         Reshapes the tensor `a` to `new_shape`.
-    backward(grad: np.ndarray) -> np.ndarray:
+    backward(grad: cp.ndarray) -> cp.ndarray:
         Reshapes the incoming gradient to the original shape of tensor `a`.
     """
 
@@ -136,13 +136,13 @@ class ReshapeOperation(Operation):
         self.a = tensor
         self.new_shape = new_shape
 
-    def forward(self) -> np.ndarray:
+    def forward(self) -> cp.ndarray:
         """
         Reshapes the tensor to the new shape.
 
         Returns:
         --------
-        np.ndarray:
+        cp.ndarray:
             The reshaped tensor.
 
         Raises:
@@ -150,21 +150,21 @@ class ReshapeOperation(Operation):
         AssertionError:
             If the tensor's data is not a numpy array.
         """
-        assert isinstance(self.a.data, np.ndarray), "Input.data must be a numpy array!"
+        assert isinstance(self.a.data, cp.ndarray), "Input.data must be a numpy array!"
         return self.a.data.reshape(*self.new_shape)
 
-    def backward(self, grad: np.ndarray) -> np.ndarray:
+    def backward(self, grad: cp.ndarray) -> cp.ndarray:
         """
         Reshapes the incoming gradient back to the original shape of the tensor.
 
         Parameters:
         -----------
-        grad : np.ndarray
+        grad : cp.ndarray
             The incoming gradient.
 
         Returns:
         --------
-        np.ndarray:
+        cp.ndarray:
             The gradient reshaped to the original shape of the tensor `a`.
         """
         return grad.reshape(self.a.shape)
@@ -175,17 +175,17 @@ class MaxOperation (Operation):
         self.a = tensor
         self.axis = axis
         self.keepdims = keepdims
-        self.indices = np.argmax(tensor.data, axis=axis, keepdims=keepdims)
-        return np.max(tensor.data, axis=axis, keepdims=keepdims)
+        self.indices = cp.argmax(tensor.data, axis=axis, keepdims=keepdims)
+        return cp.max(tensor.data, axis=axis, keepdims=keepdims)
 
     def backward(self, grad):
-        output_grad = np.zeros_like(self.a.data)
+        output_grad = cp.zeros_like(self.a.data)
         
         if self.axis is not None:
-            grad = np.broadcast_to(grad, self.indices.shape)
+            grad = cp.broadcast_to(grad, self.indices.shape)
         
         # Update output_grad at the positions where the maxima were located in the forward pass
-        np.put_along_axis(output_grad, self.indices, grad, axis=self.axis)
+        cp.put_along_axis(output_grad, self.indices, grad, axis=self.axis)
 
         return output_grad
 
@@ -205,9 +205,9 @@ class AddOperation(Operation):
         b_grad = grad
 
         if a_axes:
-            a_grad = np.sum(a_grad, axis=tuple(a_axes), keepdims=True)
+            a_grad = cp.sum(a_grad, axis=tuple(a_axes), keepdims=True)
         if b_axes:
-            b_grad = np.sum(b_grad, axis=tuple(b_axes), keepdims=True)
+            b_grad = cp.sum(b_grad, axis=tuple(b_axes), keepdims=True)
 
         # print(f"AddOperation backward: grad.shape={grad.shape}, a_grad.shape={a_grad.shape}, b_grad.shape={b_grad.shape}")
         return a_grad, b_grad
@@ -224,9 +224,9 @@ class SubOperation(Operation):
         a_axes = Operation.broadcasted_axes(self.a.shape, grad.shape)
         b_axes = Operation.broadcasted_axes(self.b.shape, grad.shape)
 
-        a_grad = np.sum(grad, axis=tuple(a_axes), keepdims=True) if a_axes else grad
+        a_grad = cp.sum(grad, axis=tuple(a_axes), keepdims=True) if a_axes else grad
         # Note the negative sign for b_grad since we are computing the gradient for subtraction
-        b_grad = -np.sum(grad, axis=tuple(b_axes), keepdims=True) if b_axes else -grad
+        b_grad = -cp.sum(grad, axis=tuple(b_axes), keepdims=True) if b_axes else -grad
 
         return a_grad, b_grad
 
@@ -235,10 +235,10 @@ class SumOperation(Operation):
     def forward(self, a, axis=None, keepdims=False):
         self.a = a
         self.axis = axis
-        return np.sum(self.a.data, axis=self.axis, keepdims=keepdims)
+        return cp.sum(self.a.data, axis=self.axis, keepdims=keepdims)
 
     def backward(self, grad):
-        return np.broadcast_to(grad, self.a.shape)
+        return cp.broadcast_to(grad, self.a.shape)
 
 class MulOperation(Operation):
     def forward(self, a, b):
@@ -251,8 +251,8 @@ class MulOperation(Operation):
         b_axes = Operation.broadcasted_axes(self.b.shape, grad.shape)
         
         # For multiplication, gradient wrt to a is grad * b and wrt to b is grad * a
-        a_grad = np.sum(grad * self.b.data, axis=tuple(a_axes), keepdims=True) if a_axes else grad * self.b.data
-        b_grad = np.sum(grad * self.a.data, axis=tuple(b_axes), keepdims=True) if b_axes else grad * self.a.data
+        a_grad = cp.sum(grad * self.b.data, axis=tuple(a_axes), keepdims=True) if a_axes else grad * self.b.data
+        b_grad = cp.sum(grad * self.a.data, axis=tuple(b_axes), keepdims=True) if b_axes else grad * self.a.data
         
         return a_grad, b_grad
 
@@ -261,34 +261,34 @@ class MatMulOperation(Operation):
     def forward(self, a, b):
         self.a = a
         self.b = b
-        return np.matmul(self.a, self.b)
+        return cp.matmul(self.a, self.b)
 
     def backward(self, grad):
         # Vector-Matrix multiplication
         if len(self.a.shape) == 1 and len(self.b.shape) == 2:
-            a_grad = np.matmul(grad, self.b.data.T)
-            b_grad = np.outer(self.a.data, grad)
+            a_grad = cp.matmul(grad, self.b.data.T)
+            b_grad = cp.outer(self.a.data, grad)
         # Matrix-Vector multiplication
         elif len(self.a.shape) == 2 and len(self.b.shape) == 1:
-            a_grad = np.outer(grad, self.b.data)
-            b_grad = np.matmul(self.a.data.T, grad)
+            a_grad = cp.outer(grad, self.b.data)
+            b_grad = cp.matmul(self.a.data.T, grad)
         # Matrix-Matrix multiplication
         elif len(self.a.shape) == 2 and len(self.b.shape) == 2:
-            a_grad = np.matmul(grad, self.b.data.T)
-            b_grad = np.matmul(self.a.data.T, grad)
+            a_grad = cp.matmul(grad, self.b.data.T)
+            b_grad = cp.matmul(self.a.data.T, grad)
         # Batched Matrix-Vector multiplication
         elif len(self.a.shape) == 3 and len(self.b.shape) == 1:
-            a_grad = np.matmul(grad[:, :, None], self.b.data[None, :])
-            b_grad = np.sum(self.a.data * grad[:, None, :], axis=0)
+            a_grad = cp.matmul(grad[:, :, None], self.b.data[None, :])
+            b_grad = cp.sum(self.a.data * grad[:, None, :], axis=0)
         # Batched Matrix-Matrix multiplication
         else:
-            a_grad = np.matmul(grad, self.b.data.swapaxes(-1, -2))
-            b_grad = np.matmul(self.a.data.swapaxes(-1, -2), grad)
+            a_grad = cp.matmul(grad, self.b.data.swapaxes(-1, -2))
+            b_grad = cp.matmul(self.a.data.swapaxes(-1, -2), grad)
         return a_grad, b_grad
 
 class DivOperation(Operation):
     def forward(self, a, b):
-        assert not np.any(b.data == 0), "Cannot divide by zero"
+        assert not cp.any(b.data == 0), "Cannot divide by zero"
         self.a = a
         self.b = b
         return a.data / b.data
@@ -298,8 +298,8 @@ class DivOperation(Operation):
         b_axes = Operation.broadcasted_axes(self.b.shape, grad.shape)
         
         # Derivative wrt to a is 1/b and wrt to b is -a/b^2
-        a_grad = np.sum(grad / self.b.data, axis=tuple(a_axes), keepdims=True) if a_axes else grad / self.b.data
-        b_grad = np.sum(grad * (-self.a.data / (self.b.data ** 2)), axis=tuple(b_axes), keepdims=True) if b_axes else grad * (-self.a.data / (self.b.data ** 2))
+        a_grad = cp.sum(grad / self.b.data, axis=tuple(a_axes), keepdims=True) if a_axes else grad / self.b.data
+        b_grad = cp.sum(grad * (-self.a.data / (self.b.data ** 2)), axis=tuple(b_axes), keepdims=True) if b_axes else grad * (-self.a.data / (self.b.data ** 2))
         
         return a_grad, b_grad
 
@@ -308,24 +308,24 @@ class SqueezeOperation(Operation):
         self.a = a
         self.axis = axis
         self.original_shape = a.shape
-        return np.squeeze(a.data, axis=axis)
+        return cp.squeeze(a.data, axis=axis)
 
     def backward(self, grad):
-        return np.reshape(grad, self.original_shape),
+        return cp.reshape(grad, self.original_shape),
 
 class UnsqueezeOperation(Operation):
     def forward(self, a, axis):
         self.a = a
         self.axis = axis
-        return np.expand_dims(a.data, axis=axis)
+        return cp.expand_dims(a.data, axis=axis)
 
     def backward(self, grad):
-        return np.squeeze(grad, axis=self.axis)
+        return cp.squeeze(grad, axis=self.axis)
     
 class ExpOperation(Operation):
     def forward(self, a):
         self.a = a
-        self.__out = np.exp(a.data)
+        self.__out = cp.exp(a.data)
         return self.__out
 
     def backward(self, grad):
@@ -338,7 +338,7 @@ class LogOperation(Operation):
     def forward(self, a):
         self.a = a
         epsilon = 1e-8  # A small constant to prevent log(0)
-        return np.log(self.a.data + epsilon)
+        return cp.log(self.a.data + epsilon)
     
     def backward(self, grad):
         epsilon = 1e-8  # A small constant to prevent division by zero
@@ -347,7 +347,7 @@ class LogOperation(Operation):
         # Handle broadcasting
         a_axes = Operation.broadcasted_axes(self.a.shape, grad.shape)
         if a_axes:
-            a_grad = np.sum(a_grad, axis=tuple(a_axes), keepdims=True)
+            a_grad = cp.sum(a_grad, axis=tuple(a_axes), keepdims=True)
         
         return a_grad.squeeze()
 
@@ -357,19 +357,19 @@ class RLeUOperation(Operation):
 
     def forward(self, a):
         self.a = a
-        self.activation = np.where(a.data > 0, a.data, self.alpha * a.data)
+        self.activation = cp.where(a.data > 0, a.data, self.alpha * a.data)
         return self.activation
 
     def backward(self, grad):
         # Reshape the grad to match the shape of self.a.data
         grad = grad.reshape(self.a.shape)
-        grad_input = grad * np.where(self.a.data > 0, 1, self.alpha)
+        grad_input = grad * cp.where(self.a.data > 0, 1, self.alpha)
         return grad_input,
 
 class TanhOperation(Operation):
     def forward(self, a):
         self.a = a
-        self.activation = np.tanh(a.data)
+        self.activation = cp.tanh(a.data)
         return self.activation
 
     def backward(self, grad):
@@ -379,7 +379,7 @@ class TanhOperation(Operation):
 class SigmoidOperation(Operation):
     def forward(self, a):
         self.a = a
-        self.activation = 1 / (1 + np.exp(-a.data))
+        self.activation = 1 / (1 + cp.exp(-a.data))
         return self.activation
     
     def backward(self, grad):
@@ -395,7 +395,7 @@ class SliceOperation(Operation):
         return a.data[self.indices]
     
     def backward(self, grad):
-        result = np.zeros_like(self.a.data)
+        result = cp.zeros_like(self.a.data)
         result[self.indices] = grad
         return result,
 
@@ -416,11 +416,11 @@ class Conv2DOperation(Operation):
         W_out = (W + 2 * self.padding - K) // self.stride + 1
 
         # Initialize output
-        output = np.zeros((N, F, H_out, W_out))
+        output = cp.zeros((N, F, H_out, W_out))
 
         # Padding
         if self.padding > 0:
-            padded_data = np.pad(self.a.data, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), 'constant')
+            padded_data = cp.pad(self.a.data, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), 'constant')
         else:
             padded_data = self.a.data
 
@@ -434,7 +434,7 @@ class Conv2DOperation(Operation):
                         j_start = j * self.stride
                         j_end = j_start + K
 
-                        output[n, f, i, j] = np.sum(
+                        output[n, f, i, j] = cp.sum(
                             padded_data[n, :, i_start:i_end, j_start:j_end] * self.w.data[f]
                         )
 
@@ -447,12 +447,12 @@ class Conv2DOperation(Operation):
         H_out, W_out = grad_output.shape[-2], grad_output.shape[-1]
 
         # Initialize gradients for input and kernel with zeros
-        grad_input = np.zeros_like(self.a.data)
-        grad_kernel = np.zeros_like(self.w.data)
+        grad_input = cp.zeros_like(self.a.data)
+        grad_kernel = cp.zeros_like(self.w.data)
         
         # Padding, if needed
         if self.padding > 0:
-            grad_input = np.pad(grad_input, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), 'constant')
+            grad_input = cp.pad(grad_input, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), 'constant')
         
         # Loop over each entry of grad_output to compute grad_input and grad_kernel
         for n in range(N):
@@ -482,7 +482,7 @@ class Conv2DOperationOptim(Operation):
         H_out = (H - K) // stride + 1
         W_out = (W - K) // stride + 1
 
-        x_col = np.zeros((N, C, K, K, H_out, W_out))
+        x_col = cp.zeros((N, C, K, K, H_out, W_out))
 
         for i in range(K):
             for j in range(K):
@@ -502,7 +502,7 @@ class Conv2DOperationOptim(Operation):
         W_out = (W - K) // stride + 1
         col = col.reshape(N, H_out, W_out, C, K, K).transpose(0, 3, 4, 5, 1, 2)
 
-        img = np.zeros((N, C, H + 2 * self.padding, W + 2 * self.padding))
+        img = cp.zeros((N, C, H + 2 * self.padding, W + 2 * self.padding))
         for i in range(K):
             for j in range(K):
                 img[:, :, i:i + H_out * stride:stride, j:j + W_out * stride:stride] += col[:, :, i, j, :, :]
@@ -513,10 +513,10 @@ class Conv2DOperationOptim(Operation):
         return img
 
     def forward(self):
-        padded_data = np.pad(self.a.data, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), 'constant')
+        padded_data = cp.pad(self.a.data, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), 'constant')
         x_col = self._im2col(padded_data, self.w.data.shape[2], self.stride)
         w_col = self.w.data.reshape(self.w.data.shape[0], -1)
-        out = np.dot(x_col, w_col.T)
+        out = cp.dot(x_col, w_col.T)
 
         N, C, H, W = self.a.data.shape
         F, _, K, K = self.w.data.shape
@@ -531,11 +531,11 @@ class Conv2DOperationOptim(Operation):
         grad_output_col = grad_output.transpose(0, 2, 3, 1).reshape(-1, F)
         w_col = self.w.data.reshape(F, -1)
 
-        grad_col = np.dot(grad_output_col, w_col)
+        grad_col = cp.dot(grad_output_col, w_col)
         grad_input = self._col2im(grad_col, self.a.data.shape, K, self.stride)
 
-        x_col = self._im2col(np.pad(self.a.data, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), 'constant'), K, self.stride)
-        grad_kernel = np.dot(grad_output_col.T, x_col).reshape(F, self.a.data.shape[1], K, K)
+        x_col = self._im2col(cp.pad(self.a.data, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), 'constant'), K, self.stride)
+        grad_kernel = cp.dot(grad_output_col.T, x_col).reshape(F, self.a.data.shape[1], K, K)
 
         return grad_input, grad_kernel
 
@@ -564,8 +564,8 @@ class MaxPool2DOperation(Operation):
         H_out = (H + 2 * self.padding - self.kernel_size) // self.stride + 1
         W_out = (W + 2 * self.padding - self.kernel_size) // self.stride + 1
 
-        output = np.zeros((N, C, H_out, W_out))
-        self.indices = np.zeros((N, C, H_out, W_out), dtype=np.int)
+        output = cp.zeros((N, C, H_out, W_out))
+        self.indices = cp.zeros((N, C, H_out, W_out), dtype=cp.int)
 
         # Perform max pooling
         for i in range(0, H - self.kernel_size + 1, self.stride):
@@ -574,8 +574,8 @@ class MaxPool2DOperation(Operation):
                 j_out = j // self.stride
 
                 patch = a.data[:, :, i:i+self.kernel_size, j:j+self.kernel_size]
-                output[:, :, i_out, j_out] = np.max(patch, axis=(2, 3))
-                self.indices[:, :, i_out, j_out] = np.argmax(patch.reshape(N, C, -1), axis=2)
+                output[:, :, i_out, j_out] = cp.max(patch, axis=(2, 3))
+                self.indices[:, :, i_out, j_out] = cp.argmax(patch.reshape(N, C, -1), axis=2)
 
         return output
 
@@ -583,7 +583,7 @@ class MaxPool2DOperation(Operation):
         N, C, H, W = self.a.data.shape
         H_out, W_out = grad.shape[-2], grad.shape[-1]
 
-        grad_input = np.zeros_like(self.a.data)
+        grad_input = cp.zeros_like(self.a.data)
 
         for i in range(H_out):
             for j in range(W_out):
@@ -596,9 +596,9 @@ class MaxPool2DOperation(Operation):
                 grad_patch = grad_patch.reshape(N, C, 1, 1)
 
                 indices = self.indices[:, :, i, j]
-                grad_input_patch = np.zeros((N, C, self.kernel_size, self.kernel_size), dtype=grad.dtype)
+                grad_input_patch = cp.zeros((N, C, self.kernel_size, self.kernel_size), dtype=grad.dtype)
 
-                flat_indices = np.arange(N * C) * self.kernel_size * self.kernel_size + indices.ravel()
+                flat_indices = cp.arange(N * C) * self.kernel_size * self.kernel_size + indices.ravel()
                 grad_input_patch.ravel()[flat_indices] = grad_patch.ravel()
 
                 grad_input[:, :, i_start:i_end, j_start:j_end] += grad_input_patch
