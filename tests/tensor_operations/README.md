@@ -93,6 +93,33 @@ The following tests will be executed and the results will be displayed in the co
    - Matrix Exp
 
 
+### [Iterablility & Subscribtion](iterablility_subscribtion_tests.py)
+
+This file contains tests for the iterable and subscriptable behavior of tensors in the `babytorch` library. The tests ensure that tensors can be iterated over and accessed using subscript notation, similar to NumPy arrays.
+
+**Running the Tests**
+
+To run the tests for iterable and subscriptable behavior, execute the following command in your terminal:
+
+```bash
+cd tests/tensor_operations/iterability_subscription
+python iterability_subscription_tests.py
+```
+
+The following tests will be executed and the results will be displayed in the console:
+
+1. **Iterable Tests**:
+   - Test that a tensor can be iterated over and returns the expected values.
+
+2. **Subscriptable Get Tests**:
+   - Test that a specific element of a tensor can be accessed using subscript notation, and it returns the expected value.
+
+3. **Subscriptable Set Tests**:
+   - Test that a specific element of a tensor can be modified using subscript notation, and the modification is reflected in the tensor.
+
+4. **Multi-dimensional Tests**:
+   - Test that multi-dimensional tensors can be accessed using multiple subscripts, and the expected values are returned.
+
 ### Conclusion
 
 This test suite serves as a comprehensive validation tool for the tensor operations and activation functions implemented in `babytorch`. By comparing the results with PyTorch, it ensures the correctness and consistency of the framework's functionalities. Whether you're developing new features for `babytorch` or using it in your deep learning projects, these tests provide confidence in the reliability of the library.

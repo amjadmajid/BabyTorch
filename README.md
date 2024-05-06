@@ -48,12 +48,8 @@ Below are some examples of how to use BabyTorch, which also serve as basic tests
    - [Simple Linear Regression](tutorials/regression/README.md)
  
 3. **Tensor Tests**:
-   - [Mathematical operations](tests/tensor_tests/math_operations/add_mul_tests.py)
-   - [Martix multiplication with broadcasting](tests/tensor_operations/math_operations/matrix_multiplication_with_broadcasting.py)
-   - Iterability and subscription tests: `tests/tensor_tests/iteration_subscribtion/iterablility_subscribtion_tests.py`
-   - 
+   - [Tensor operations](tests/tensor_operations/README.md)
    
-
 4. **Visualization Tests**:
    - Graph visualization: `tests/visualization_tests/grapher_test.py`
 
