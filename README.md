@@ -104,18 +104,22 @@ The BabyTorch framework is designed with simplicity and educational value in min
 ├── README.md
 ├── TODO.md
 ├── babytorch
-│   ├── __init__.py
-│   ├── __pycache__
-│   ├── datasets
-│   ├── engine
-│   ├── nn
-│   ├── optim
-│   └── visualization
+│   ├── __init__.py
+│   ├── __pycache__
+│   ├── datasets
+│   ├── engine
+│   ├── nn
+│   ├── optim
+│   └── visualization
+├── images
+│   └── babyTorchLogo.jpg
 ├── setup.py
-└── tests
-    ├── nn_module
-    ├── tensor_tests
-    └── visualization_tests
+├── tests
+│   ├── tensor_operations
+│   └── visualization
+└── tutorials
+    ├── classification
+    └── regression
 ```
 ---
 
