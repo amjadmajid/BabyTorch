@@ -27,7 +27,7 @@ def babytorch_classification(input, target, num_iterations=1000, lr=0.001):
         loss.backward()
         optimizer.step()
 
-        losses.append(loss.data)
+        losses.append(loss.data.get()) # get() moves data to CPU
         # print(f"{num_iterations+1} - babytorch loss: {loss.data}")
     return  y_pred, losses
 

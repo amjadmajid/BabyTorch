@@ -80,21 +80,44 @@ class Operation:
         return axes
 
 class TransposeOperation(Operation):
+    def __init__(self, axes=None):
+        """Initialize the TransposeOperation with optional axes specification.
+        
+        Args:
+            axes (tuple, optional): A tuple specifying the permutation of axes. Default is None.
+        """
+        self.axes = axes
+
     def forward(self, a):
-        """Transpose operation. 
-        TODO: support transposing along specified axes.
+        """Transpose operation supporting transposing along specified axes.
         
         Args:
             a (Tensor): Input tensor.
 
         Returns:
-            Tensor: numpy array.
+            Tensor: The transposed tensor as a CuPy array.
         """
         self.a = a
+        if self.axes is not None:
+            return cp.transpose(a.data, self.axes)
         return cp.transpose(a.data)
 
     def backward(self, grad):
-        return cp.transpose(grad),
+        """Backward pass for the transpose operation.
+        
+        Args:
+            grad (Tensor): Gradient tensor.
+
+        Returns:
+            Tensor: Transposed gradient.
+        """
+        # To reverse the transpose, we invert the axes
+        if self.axes is not None:
+            # Calculate the inverse permutation
+            inv_axes = tuple(np.argsort(self.axes))
+            return cp.transpose(grad, inv_axes)
+        return cp.transpose(grad)
+
 
 class ReshapeOperation(Operation):
     """
@@ -261,7 +284,7 @@ class MatMulOperation(Operation):
     def forward(self, a, b):
         self.a = a
         self.b = b
-        return cp.matmul(self.a, self.b)
+        return cp.matmul(self.a.data, self.b.data)
 
     def backward(self, grad):
         # Vector-Matrix multiplication

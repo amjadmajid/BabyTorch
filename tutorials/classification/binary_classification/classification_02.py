@@ -47,7 +47,7 @@ for epoch in range(num_iterations):
     optimizer.step()
     # scheduler.step(k)
     model.zero_grad()
-    losses.append(loss.data)
+    losses.append(loss.data.get())
     # print(f"Epoch{epoch+1}/{num_iterations}, lr={optimizer.learning_rate}, loss={loss.data}")
 
 # Plot the loss
@@ -64,8 +64,15 @@ scores = model(Tensor(Xmesh))
 Z = cp.array([s > 0 for s in scores])
 Z = Z.reshape(xx.shape)
 
-plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral, alpha=0.8)
+# Convert cupy arrays to numpy arrays for matplotlib
+xx_np = xx.get()
+yy_np = yy.get()
+Z_np = Z.get()
+
+# Use numpy arrays for plotting
+plt.contourf(xx_np, yy_np, Z_np, cmap=plt.cm.Spectral, alpha=0.8)
 plt.scatter(X_orig[:, 0], X_orig[:, 1], c=y_orig, s=40, cmap=plt.cm.Spectral)
-plt.xlim(xx.min(), xx.max())
-plt.ylim(yy.min(), yy.max())
+plt.xlim(xx_np.min(), xx_np.max())
+plt.ylim(yy_np.min(), yy_np.max())
 plt.show()
+

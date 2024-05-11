@@ -17,6 +17,7 @@ class no_grad:
 class Tensor:
     def __init__(self, data, requires_grad=False, dtype=cp.float32, label="", _op_label=""):
         self.data = cp.array(data, dtype=dtype)
+        self.dtype = self.data.dtype
         self.requires_grad = requires_grad
         self.grad = None
         self.operation = None
@@ -54,13 +55,16 @@ class Tensor:
             output_tensor.operation = reshape_op
         return output_tensor
 
-    def transpose(self):
-        transpose_op = TransposeOperation()
+    def transpose(self, axes=None):
+        if axes is None:
+            axes = reversed(range(len(self.shape)))
+        transpose_op = TransposeOperation(axes)
         result = transpose_op.forward(self)
-        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT, _op_label="T")
+        output_tensor = Tensor(result, requires_grad=self.requires_grad and not NO_GRAD_CONTEXT, _op_label="transpose")
         if output_tensor.requires_grad:
             output_tensor.operation = transpose_op
         return output_tensor
+
     
     def max(self, axis=None, keepdims=False):
         max_op = MaxOperation()
@@ -279,18 +283,14 @@ class Tensor:
                     grads = (grads,)
 
                 for tensor, tensor_grad in zip(v.operation.inputs(), grads):
-                    if tensor.requires_grad:     
+                    if tensor.requires_grad:
                         if tensor.grad is None:
                             tensor.grad = tensor_grad
                         else:
-                            if tensor.grad.flags.writeable:
-                                if tensor.grad.shape != tensor_grad.shape:
-                                        tensor_grad = tensor_grad.reshape(tensor.grad.shape)
-                                tensor.grad += tensor_grad
-                            else:
-                                if tensor.grad.shape != tensor_grad.shape:
-                                    tensor_grad = tensor_grad.reshape(tensor.grad.shape)
-                                tensor.grad = tensor.grad + tensor_grad
+                            if tensor.grad.shape != tensor_grad.shape:
+                                tensor_grad = tensor_grad.reshape(tensor.grad.shape)
+                            tensor.grad += tensor_grad
+
 
     def __repr__(self):
       return f"Tensor( {str(self.data)},requires_grad={self.requires_grad})"
