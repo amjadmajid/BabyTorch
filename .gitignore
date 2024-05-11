@@ -4,3 +4,4 @@ __pycache__/
 # Jupyter Notebook
 .ipynb_checkpoints
 .DS_Store
+.vscode/
