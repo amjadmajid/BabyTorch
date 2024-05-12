@@ -27,6 +27,15 @@ To install BabyTorch, follow these steps:
    pip install -e . --user 
    ```
 
+### GPU Support
+1. Install CUDA Toolkit. For that you need to specify your system specifications and follow the instructions on [NVIDIA website](https://developer.nvidia.com/cuda-downloads)
+2. Install CuPy from GitHub following these instructions
+   ```
+   git clone --recursive https://github.com/cupy/cupy.git
+   cd cupy
+   pip install .
+   ```
+
 ## Features
 BabyTorch includes the following modules, mirroring the structure of PyTorch:
 
