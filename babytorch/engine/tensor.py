@@ -1,9 +1,12 @@
+"""Tensor class for automatic differentiation."""
+
 import cupy as cp
-from .operations import * 
+from .operations import *
 
 NO_GRAD_CONTEXT = False
 
 class no_grad:
+    """Context manager that disables gradient tracking."""
     def __enter__(self):
         global NO_GRAD_CONTEXT
         self.previous_value = NO_GRAD_CONTEXT
@@ -15,7 +18,23 @@ class no_grad:
         NO_GRAD_CONTEXT = self.previous_value
 
 class Tensor:
+    """A minimal tensor object that records operations for autodiff."""
     def __init__(self, data, requires_grad=False, dtype=cp.float32, label="", _op_label=""):
+        """Create a new tensor wrapping ``data``.
+
+        Parameters
+        ----------
+        data : array-like
+            Numeric data accepted by ``cupy.array``.
+        requires_grad : bool, optional
+            If ``True`` gradients will be accumulated during backprop.
+        dtype : cupy.dtype, optional
+            Desired data type of the tensor.
+        label : str, optional
+            Optional human readable label for debugging.
+        _op_label : str, optional
+            Name of the operation that produced this tensor.
+        """
         self.data = cp.array(data, dtype=dtype)
         self.dtype = self.data.dtype
         self.requires_grad = requires_grad
@@ -253,6 +272,7 @@ class Tensor:
         return output_tensor
 
     def backward(self, grad=None):
+        """Propagate gradients back through the recorded graph."""
         if self.grad is None:
             if grad is not None:
                 assert cp.isscalar(grad), "The gradient passed to backward() must be a scalar."
