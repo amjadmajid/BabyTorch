@@ -1,8 +1,11 @@
+"""Basic neural network layers and helper classes."""
+
 import cupy as cp
 from babytorch.engine import Tensor
 import pickle
 
 class Module:
+    """Base class for all neural network layers."""
     def zero_grad(self):
         """Zero out the gradients for all parameters."""
         for p in self.parameters():
@@ -32,6 +35,7 @@ class Module:
         return model
 
 class ReLU(Module):
+    """Apply the rectified linear unit function."""
     def __call__(self, x):
         return x.relu()
 
@@ -39,6 +43,7 @@ class ReLU(Module):
         return "ReLU"
 
 class Tanh(Module):
+    """Apply the hyperbolic tangent function."""
     def __call__(self, x):
         return x.tanh()
 
@@ -46,6 +51,7 @@ class Tanh(Module):
         return "Tanh"
 
 class Sigmoid(Module):
+    """Apply the logistic sigmoid function."""
     def __call__(self, x):
         return x.sigmoid()
 
@@ -53,6 +59,7 @@ class Sigmoid(Module):
         return "Sigmoid"
 
 class Linear(Module):
+    """Fully connected layer ``y = xW + b``."""
     def __init__(self, in_features, out_features, activation_function=None):
         self.w = Tensor(cp.random.uniform(-0.1, 0.1, (in_features, out_features)), requires_grad=True)
         self.b = Tensor(cp.zeros((1, out_features)), requires_grad=True)
@@ -62,7 +69,8 @@ class Linear(Module):
         return self.forward(x)
 
     def forward(self, x):
-        # print("Linear forward:", x.shape, self.w.shape, self.b.shape)
+        """Compute the linear transformation and optional activation."""
+        # xW + b
         out = x.__matmul__(self.w) + self.b
         if self.activation_function:
             out = self.activation_function(out)
@@ -77,6 +85,7 @@ class Linear(Module):
 
 
 class Conv2D(Module):
+    """2D convolution layer."""
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -91,6 +100,7 @@ class Conv2D(Module):
         return self.forward(x)
 
     def forward(self, x):
+        """Apply the convolution and add the bias."""
         conv_result = x.conv2d(self.w, self.stride, self.padding).data
         for i in range(self.out_channels):
             conv_result[:, i, :, :] += self.b.data[i]
@@ -107,6 +117,7 @@ class Conv2D(Module):
                 f"kernel_size={self.kernel_size}, stride={self.stride}, padding={self.padding})")
     
 class Flatten(Module):
+    """Layer that flattens its input to ``(batch, -1)``."""
     def __call__(self, x):
         return x.flatten()
 
@@ -114,10 +125,12 @@ class Flatten(Module):
         return "Flatten"
 
 class Sequential(Module):
+    """Container that applies layers sequentially."""
     def __init__(self, *layers):
         self.layers = layers
 
     def forward(self, x):
+        """Pass ``x`` through each layer in order."""
         for layer in self.layers:
             x = layer(x)
         return x

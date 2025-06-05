@@ -1,14 +1,28 @@
 
-import cupy as cp 
+"""Computation primitives used by :class:`~babytorch.engine.tensor.Tensor`.\n\
+\nThis module implements small differentiable operations. Each operation\nperforms a forward pass on CuPy arrays and knows how to propagate\ngradients backward. The operations are kept separate from the\n``Tensor`` class to keep the computation engine minimal and focused\non numerical kernels."""
+
+import cupy as cp
 
 class Operation:
+    """Base class for all differentiable operations.
+
+    Subclasses implement :meth:`forward` to perform the actual
+    computation and :meth:`backward` to propagate gradients.  Inputs
+    used during the forward pass are stored on the instance so that
+    the backward pass can reuse them.
+    """
+
     def forward(self):
+        """Compute the output of the operation."""
         raise NotImplementedError
 
     def backward(self, grad):
+        """Given a gradient of the output, compute gradients of inputs."""
         raise NotImplementedError
     
     def inputs(self):
+        """Return tensors that were used as inputs for the operation."""
         attributes = []
         if hasattr(self, 'a'):
             attributes.append(self.a)
@@ -194,6 +208,7 @@ class ReshapeOperation(Operation):
 
 
 class MaxOperation (Operation):
+    """Return the maximum values of a tensor along a given axis."""
     def forward(self, tensor, axis=None, keepdims=True):
         self.a = tensor
         self.axis = axis
@@ -213,7 +228,9 @@ class MaxOperation (Operation):
         return output_grad
 
 class AddOperation(Operation):
+    """Element-wise addition of two tensors."""
     def forward(self, a, b):
+        """Compute ``a + b``."""
         self.a = a
         self.b = b
         result = a.data + b.data
@@ -221,6 +238,7 @@ class AddOperation(Operation):
         return result
 
     def backward(self, grad):
+        """Return gradients for ``a`` and ``b`` w.r.t. the output."""
         a_axes = Operation.broadcasted_axes(self.a.shape, grad.shape)
         b_axes = Operation.broadcasted_axes(self.b.shape, grad.shape)
 
@@ -310,6 +328,7 @@ class MatMulOperation(Operation):
         return a_grad, b_grad
 
 class DivOperation(Operation):
+    """Element-wise division with broadcast support."""
     def forward(self, a, b):
         assert not cp.any(b.data == 0), "Cannot divide by zero"
         self.a = a
@@ -327,6 +346,7 @@ class DivOperation(Operation):
         return a_grad, b_grad
 
 class SqueezeOperation(Operation):
+    """Remove dimensions of size one from ``a``."""
     def forward(self, a, axis=None):
         self.a = a
         self.axis = axis
@@ -337,6 +357,7 @@ class SqueezeOperation(Operation):
         return cp.reshape(grad, self.original_shape),
 
 class UnsqueezeOperation(Operation):
+    """Insert a dimension of size one at the given axis."""
     def forward(self, a, axis):
         self.a = a
         self.axis = axis
@@ -346,6 +367,7 @@ class UnsqueezeOperation(Operation):
         return cp.squeeze(grad, axis=self.axis)
     
 class ExpOperation(Operation):
+    """Element-wise exponential."""
     def forward(self, a):
         self.a = a
         self.__out = cp.exp(a.data)
@@ -390,6 +412,7 @@ class RLeUOperation(Operation):
         return grad_input,
 
 class TanhOperation(Operation):
+    """Hyperbolic tangent activation."""
     def forward(self, a):
         self.a = a
         self.activation = cp.tanh(a.data)
@@ -400,6 +423,7 @@ class TanhOperation(Operation):
         return grad_input,
 
 class SigmoidOperation(Operation):
+    """Sigmoid activation function."""
     def forward(self, a):
         self.a = a
         self.activation = 1 / (1 + cp.exp(-a.data))
@@ -410,6 +434,7 @@ class SigmoidOperation(Operation):
         return grad_input,
 
 class SliceOperation(Operation):
+    """Extract a slice from a tensor."""
     def __init__(self, indices):
         self.indices = indices
 
@@ -423,6 +448,7 @@ class SliceOperation(Operation):
         return result,
 
 class Conv2DOperation(Operation):
+    """Naive 2D convolution used mainly for reference."""
     def __init__(self, a, w, stride, padding):
         self.a = a  # Input tensor
         self.w = w  # Weight tensor (i.e., filters)
@@ -494,6 +520,7 @@ class Conv2DOperation(Operation):
 import numpy as np
 
 class Conv2DOperationOptim(Operation):
+    """Optimized convolution using im2col/col2im tricks."""
     def __init__(self, a, w, stride, padding):
         self.a = a  # Input tensor
         self.w = w  # Weight tensor (i.e., filters)
@@ -564,6 +591,7 @@ class Conv2DOperationOptim(Operation):
 
 
 class FlattenOperation(Operation):
+    """Reshape a tensor to ``(batch, -1)`` preserving batch dimension."""
     def forward(self, a):
         self.a = a
         self.original_shape = a.shape
@@ -574,6 +602,7 @@ class FlattenOperation(Operation):
 
 
 class MaxPool2DOperation(Operation):
+    """2D max pooling operation."""
     def __init__(self, kernel_size, stride, padding):
         self.kernel_size = kernel_size
         self.stride = stride
@@ -627,4 +656,5 @@ class MaxPool2DOperation(Operation):
                 grad_input[:, :, i_start:i_end, j_start:j_end] += grad_input_patch
 
         return grad_input
+
 
