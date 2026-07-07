@@ -188,6 +188,8 @@ Prefer functions over layer objects? `babytorch.nn.functional` (usually
 imported as `F`) offers `F.relu`, `F.softmax`, `F.cross_entropy`, ... —
 the same math without constructing modules.
 
+![A model with knobs: x flows through Linear 2 to 8, Tanh, Linear 8 to 1, Sigmoid into a prediction, which MSELoss compares with the targets to produce the one number you call backward on](figures/fig-mlp.svg)
+
 **Try it**
 
 ```python

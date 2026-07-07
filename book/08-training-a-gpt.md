@@ -63,11 +63,7 @@ A trained model maps context to next-token probabilities. Writing is
 just applying it repeatedly — `GPT.generate` in
 [`model.py`](../tutorials/llm/model.py):
 
-```
-context ─► forward ─► last position's logits ─► probabilities
-   ▲                                                 │ sample one token
-   └───────────── append it to the context ◄─────────┘
-```
+![Generation is a classifier in a loop: the context (cropped to block_size) is forwarded through the frozen GPT to logits, which are divided by the temperature, filtered to the top-k, turned into probabilities by softmax, and sampled; the new token is appended and the loop goes around again — one token per lap](figures/fig-generation.svg)
 
 Three practical details, all visible in the code:
 

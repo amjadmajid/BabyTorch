@@ -29,6 +29,8 @@ for step in range(num_steps):
     optimizer.step()                     # 4. small step downhill
 ```
 
+![The four-step training loop: forward computes predictions, the loss says how wrong they are, backward produces a gradient for every parameter, and the optimizer steps downhill — with zero_grad clearing old gradients before each lap](figures/fig-training-loop.svg)
+
 Why `zero_grad()` every time? Chapter 2: `backward()` **accumulates**
 into `.grad` (it must — a parameter used twice sums its contributions).
 Without the reset, batch 2 would inherit batch 1's gradients. Forgetting

@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 1120" width="880" height="1120" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<defs>
+<marker id="arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#52514e"/>
+</marker>
+<marker id="arr-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#e34948"/>
+</marker>
+<marker id="arr-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#2a78d6"/>
+</marker>
+</defs>
+<rect x="0.5" y="0.5" width="879" height="1119" rx="14" fill="#fcfcfb" stroke="rgba(11,11,11,0.10)"/>
+<text x='32' y='42' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='17' fill='#0b0b0b' font-weight='700' text-anchor='start'>BabyGPT — a decoder-only Transformer</text>
+<text x='32' y='63' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#52514e' font-weight='normal' text-anchor='start'>tutorials/llm/model.py · default configuration from train.py</text>
+<rect x='162.0' y='970.0' width='236' height='30' rx='15.0' fill='#f0efec' stroke='#c3c2b7' stroke-width='1.3'/>
+<text x='280' y='989.32' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#52514e' font-weight='500' text-anchor='middle'>token ids — shape (B, T)</text>
+<text x='410' y='989' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>"To be…" → [44, 53, 1, …]</text>
+<line x1='280' y1='968' x2='280' y2='940' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<path d='M 280 952 L 192 952 L 192 938' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<path d='M 280 952 L 368 952 L 368 938' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='113.0' y='884' width='158' height='52' rx='9' fill='#ddeafa' stroke='#2a78d6' stroke-width='1.5'/>
+<text x='192' y='907.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#0b0b0b' font-weight='600' text-anchor='middle'>Token embedding</text>
+<text x='192' y='922.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='middle'>65 × 192 lookup</text>
+<rect x='289.0' y='884' width='158' height='52' rx='9' fill='#ddeafa' stroke='#2a78d6' stroke-width='1.5'/>
+<text x='368' y='907.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#0b0b0b' font-weight='600' text-anchor='middle'>Position embedding</text>
+<text x='368' y='922.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='middle'>128 × 192 lookup</text>
+<text x='462' y='918' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='start'>positions 0…T−1</text>
+<path d='M 192 884 L 192 862 L 264 862' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<path d='M 368 884 L 368 862 L 296 862' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<circle cx='280' cy='862' r='12' fill='#ffffff' stroke='#52514e' stroke-width='1.6'/><line x1='273' y1='862' x2='287' y2='862' stroke='#52514e' stroke-width='1.8'/><line x1='280' y1='855' x2='280' y2='869' stroke='#52514e' stroke-width='1.8'/>
+<text x='254' y='845' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='end'>what it is + where it sits</text>
+<line x1='280' y1='849' x2='280' y2='828' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='215.0' y='794' width='130' height='32' rx='9' fill='#f0efec' stroke='#c3c2b7' stroke-width='1.5'/>
+<text x='280' y='814.14' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11.5' fill='#0b0b0b' font-weight='600' text-anchor='middle'>Dropout 0.1</text>
+<line x1='280' y1='794' x2='280' y2='768' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<text x='292' y='780' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>x — (B, T, 192)</text>
+<rect x='90' y='300' width='380' height='456' rx='12' fill='#f7f6f3' stroke='#d8d6cf' stroke-width='1.4'/>
+<text x='104' y='324' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11' fill='#898781' font-weight='600' text-anchor='start' letter-spacing='0.08em'>TRANSFORMER BLOCK</text>
+<path d='M 486 306 L 496 306 L 496 750 L 486 750' fill='none' stroke='#52514e' stroke-width='1.4'/>
+<text x='510' y='529.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='15' fill='#0b0b0b' font-weight='700' text-anchor='start'>× 6</text>
+<text x='510' y='547.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>identical blocks,</text>
+<text x='510' y='561.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>stacked</text>
+<line x1='280' y1='762' x2='280' y2='726' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='142.0' y='690' width='276' height='36' rx='9' fill='#e5e2f6' stroke='#4a3aa7' stroke-width='1.5'/>
+<text x='280' y='712.5' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12.5' fill='#0b0b0b' font-weight='600' text-anchor='middle'>LayerNorm</text>
+<line x1='280' y1='690' x2='280' y2='662' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='142.0' y='606' width='276' height='56' rx='9' fill='#fce3d9' stroke='#eb6834' stroke-width='1.5'/>
+<text x='280' y='631.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='13' fill='#0b0b0b' font-weight='600' text-anchor='middle'>Causal self-attention</text>
+<text x='280' y='646.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='middle'>6 heads · head_size 32 · no peeking ahead</text>
+<line x1='280' y1='606' x2='280' y2='566' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<circle cx='280' cy='552' r='12' fill='#ffffff' stroke='#52514e' stroke-width='1.6'/><line x1='273' y1='552' x2='287' y2='552' stroke='#52514e' stroke-width='1.8'/><line x1='280' y1='545' x2='280' y2='559' stroke='#52514e' stroke-width='1.8'/>
+<path d='M 280 744 L 118 744 L 118 552 L 264 552' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<text x='109' y='646' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='middle' transform='rotate(-90 109 646)'>residual</text>
+<text x='304' y='540' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>communicate</text>
+<line x1='280' y1='539' x2='280' y2='516' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='142.0' y='480' width='276' height='36' rx='9' fill='#e5e2f6' stroke='#4a3aa7' stroke-width='1.5'/>
+<text x='280' y='502.5' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12.5' fill='#0b0b0b' font-weight='600' text-anchor='middle'>LayerNorm</text>
+<line x1='280' y1='480' x2='280' y2='452' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='142.0' y='396' width='276' height='56' rx='9' fill='#d9f3e8' stroke='#1baf7a' stroke-width='1.5'/>
+<text x='280' y='421.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='13' fill='#0b0b0b' font-weight='600' text-anchor='middle'>MLP (feed-forward)</text>
+<text x='280' y='436.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='middle'>Linear 192→768 · GELU · Linear 768→192</text>
+<line x1='280' y1='396' x2='280' y2='356' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<circle cx='280' cy='342' r='12' fill='#ffffff' stroke='#52514e' stroke-width='1.6'/><line x1='273' y1='342' x2='287' y2='342' stroke='#52514e' stroke-width='1.8'/><line x1='280' y1='335' x2='280' y2='349' stroke='#52514e' stroke-width='1.8'/>
+<path d='M 280 530 L 118 530 L 118 342 L 264 342' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<text x='304' y='330' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>compute</text>
+<line x1='280' y1='329' x2='280' y2='294' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<line x1='280' y1='294' x2='280' y2='262' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='142.0' y='226' width='276' height='36' rx='9' fill='#e5e2f6' stroke='#4a3aa7' stroke-width='1.5'/>
+<text x='280' y='248.5' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12.5' fill='#0b0b0b' font-weight='600' text-anchor='middle'>Final LayerNorm</text>
+<line x1='280' y1='226' x2='280' y2='198' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='142.0' y='142' width='276' height='56' rx='9' fill='#fcedcc' stroke='#eda100' stroke-width='1.5'/>
+<text x='280' y='167.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='13' fill='#0b0b0b' font-weight='600' text-anchor='middle'>Output head</text>
+<text x='280' y='182.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='middle'>Linear 192 → 65: one score per token</text>
+<line x1='280' y1='142' x2='280' y2='116' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='150.0' y='83.0' width='260' height='30' rx='15.0' fill='#fcedcc' stroke='#eda100' stroke-width='1.3'/>
+<text x='280' y='102.32' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#52514e' font-weight='500' text-anchor='middle'>logits — shape (B, T, 65)</text>
+<text x='420' y='92' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>a next-token guess,</text>
+<text x='420' y='106' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>at every position</text>
+<rect x='588' y='96' width='260' height='336' rx='12' fill='#ffffff' stroke='#d8d6cf' stroke-width='1.3'/>
+<text x='606' y='126' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='13' fill='#0b0b0b' font-weight='700' text-anchor='start'>Model card</text>
+<text x='606' y='144' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>the train.py defaults</text>
+<text x='606' y='172' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='11' fill='#0b0b0b' font-weight='600' text-anchor='start'>n_embd</text>
+<text x='696' y='172' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>192  (width of every token vector)</text>
+<text x='606' y='198' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='11' fill='#0b0b0b' font-weight='600' text-anchor='start'>n_head</text>
+<text x='696' y='198' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>6  → head_size 32</text>
+<text x='606' y='224' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='11' fill='#0b0b0b' font-weight='600' text-anchor='start'>n_layer</text>
+<text x='696' y='224' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>6  Transformer blocks</text>
+<text x='606' y='250' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='11' fill='#0b0b0b' font-weight='600' text-anchor='start'>block_size</text>
+<text x='696' y='250' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>128 tokens of context</text>
+<text x='606' y='276' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='11' fill='#0b0b0b' font-weight='600' text-anchor='start'>vocab_size</text>
+<text x='696' y='276' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>65 characters (Shakespeare)</text>
+<text x='606' y='302' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='11' fill='#0b0b0b' font-weight='600' text-anchor='start'>dropout</text>
+<text x='696' y='302' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>0.1</text>
+<text x='606' y='328' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='11' fill='#0b0b0b' font-weight='600' text-anchor='start'>parameters</text>
+<text x='696' y='328' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>2,719,169  ≈ 2.7 M</text>
+<text x='606' y='354' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='11' fill='#0b0b0b' font-weight='600' text-anchor='start'>optimizer</text>
+<text x='696' y='354' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>AdamW · cosine warmup</text>
+<text x='606' y='386' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>≈ 98 % of the parameters live in the</text>
+<text x='606' y='401' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>six blocks — nearly all serving  @</text>
+<text x='606' y='472' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11.5' fill='#0b0b0b' font-weight='600' text-anchor='start'>Same skeleton, more floors:</text>
+<text x='606' y='494' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>GPT-2:  n_embd 768 · 12 layers · 124 M</text>
+<text x='606' y='512' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>GPT-3:  n_embd 12288 · 96 layers · 175 B</text>
+<text x='32' y='1058' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11' fill='#898781' font-weight='normal' text-anchor='start'>Read bottom-up: ids enter at the bottom, logits leave at the top.</text>
+<rect x='32' y='1081' width='14' height='12' rx='3' fill='#ddeafa' stroke='#2a78d6' stroke-width='1.2'/>
+<text x='52' y='1091' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>embedding</text>
+<rect x='136.8' y='1081' width='14' height='12' rx='3' fill='#e5e2f6' stroke='#4a3aa7' stroke-width='1.2'/>
+<text x='156.8' y='1091' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>LayerNorm</text>
+<rect x='241.60000000000002' y='1081' width='14' height='12' rx='3' fill='#fce3d9' stroke='#eb6834' stroke-width='1.2'/>
+<text x='261.6' y='1091' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>attention</text>
+<rect x='346.40000000000003' y='1081' width='14' height='12' rx='3' fill='#d9f3e8' stroke='#1baf7a' stroke-width='1.2'/>
+<text x='366.40000000000003' y='1091' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>MLP</text>
+<rect x='408.00000000000006' y='1081' width='14' height='12' rx='3' fill='#fcedcc' stroke='#eda100' stroke-width='1.2'/>
+<text x='428.00000000000006' y='1091' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>head / logits</text>
+<rect x='541.6000000000001' y='1081' width='14' height='12' rx='3' fill='#f0efec' stroke='#c3c2b7' stroke-width='1.2'/>
+<text x='561.6000000000001' y='1091' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>data</text>
+</svg>

@@ -9,15 +9,7 @@ is about that structure.*
 A **tensor** is an n-dimensional array: a block of numbers plus a
 **shape** that says how the block is organized.
 
-```
-  scalar        vector          matrix              3-D tensor
-  shape ()      shape (4,)      shape (2, 3)        shape (2, 2, 3)
-
-    7.0         [1 2 3 4]       [[1 2 3]            [[[1 2 3]
-                                 [4 5 6]]             [4 5 6]]
-                                                     [[7 8 9]
-                                                      [0 1 2]]]
-```
+![Tensors are blocks of numbers with a shape — scalar, vector, matrix, 3-D — and broadcasting stretches a size-1 tensor to serve a whole batch](figures/fig-tensors.svg)
 
 Why does deep learning insist on this structure instead of Python lists?
 Two reasons:

@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 596" width="880" height="596" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<defs>
+<marker id="arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#52514e"/>
+</marker>
+<marker id="arr-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#e34948"/>
+</marker>
+<marker id="arr-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#2a78d6"/>
+</marker>
+</defs>
+<rect x="0.5" y="0.5" width="879" height="595" rx="14" fill="#fcfcfb" stroke="rgba(11,11,11,0.10)"/>
+<text x='32' y='42' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='17' fill='#0b0b0b' font-weight='700' text-anchor='start'>One head of causal self-attention</text>
+<text x='32' y='63' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#52514e' font-weight='normal' text-anchor='start'>every position asks a question (q), offers an answer (k), and carries a payload (v)</text>
+<rect x='85.0' y='103.0' width='170' height='30' rx='15.0' fill='#f0efec' stroke='#c3c2b7' stroke-width='1.3'/>
+<text x='170' y='122.14' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11.5' fill='#52514e' font-weight='500' text-anchor='middle'>x — (B, T, C)</text>
+<line x1='170' y1='133' x2='170' y2='158' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='75.0' y='158' width='190' height='44' rx='9' fill='#fce3d9' stroke='#eb6834' stroke-width='1.5'/>
+<text x='170' y='177.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#0b0b0b' font-weight='600' text-anchor='middle'>Linear C → 3C</text>
+<text x='170' y='192.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='middle'>one matmul makes q, k, v</text>
+<path d='M 170 202 L 100 216 L 100 228' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='73.0' y='230' width='54' height='36' rx='9' fill='#fce3d9' stroke='#eb6834' stroke-width='1.5'/>
+<text x='100' y='252.68' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='13' fill='#0b0b0b' font-weight='600' text-anchor='middle'>q</text>
+<path d='M 170 202 L 170 216 L 170 228' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='143.0' y='230' width='54' height='36' rx='9' fill='#fce3d9' stroke='#eb6834' stroke-width='1.5'/>
+<text x='170' y='252.68' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='13' fill='#0b0b0b' font-weight='600' text-anchor='middle'>k</text>
+<path d='M 170 202 L 240 216 L 240 228' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='213.0' y='230' width='54' height='36' rx='9' fill='#fce3d9' stroke='#eb6834' stroke-width='1.5'/>
+<text x='240' y='252.68' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='13' fill='#0b0b0b' font-weight='600' text-anchor='middle'>v</text>
+<text x='170' y='286' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='middle'>each (T, hs)</text>
+<path d='M 100 266 L 100 282 L 152 296' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<path d='M 170 266 L 170 282 L 164 288' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='58.0' y='296' width='200' height='40' rx='9' fill='#f0efec' stroke='#c3c2b7' stroke-width='1.5'/>
+<text x='158' y='320.32' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#0b0b0b' font-weight='600' text-anchor='middle'>scores = q @ kᵀ / √hs</text>
+<text x='158' y='352' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='middle'>÷ √hs keeps softmax soft —</text>
+<text x='158' y='366' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='middle'>big dots would kill the gradient</text>
+<text x='532.0' y='124' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11.5' fill='#0b0b0b' font-weight='600' text-anchor='middle'>attention weights (T × T), after mask + softmax</text>
+<rect x='430' y='150' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='464' y='150' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='479.5' y='169.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='498' y='150' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='513.5' y='169.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='532' y='150' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='547.5' y='169.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='566' y='150' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='581.5' y='169.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='600' y='150' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='615.5' y='169.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='430' y='184' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='464' y='184' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='498' y='184' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='513.5' y='203.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='532' y='184' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='547.5' y='203.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='566' y='184' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='581.5' y='203.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='600' y='184' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='615.5' y='203.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='430' y='218' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='464' y='218' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='498' y='218' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='532' y='218' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='547.5' y='237.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='566' y='218' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='581.5' y='237.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='600' y='218' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='615.5' y='237.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='430' y='252' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='464' y='252' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='498' y='252' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='532' y='252' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='566' y='252' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='581.5' y='271.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='600' y='252' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='615.5' y='271.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='430' y='286' width='31' height='31' rx='4' fill='#eb6834' fill-opacity='0.33' stroke='#eb6834' stroke-width='1.2'/>
+<rect x='464' y='286' width='31' height='31' rx='4' fill='#eb6834' fill-opacity='0.98' stroke='#eb6834' stroke-width='1.2'/>
+<rect x='498' y='286' width='31' height='31' rx='4' fill='#eb6834' fill-opacity='0.38' stroke='#eb6834' stroke-width='1.2'/>
+<rect x='532' y='286' width='31' height='31' rx='4' fill='#eb6834' fill-opacity='0.33' stroke='#eb6834' stroke-width='1.2'/>
+<rect x='566' y='286' width='31' height='31' rx='4' fill='#eb6834' fill-opacity='0.73' stroke='#eb6834' stroke-width='1.2'/>
+<rect x='600' y='286' width='31' height='31' rx='4' fill='#f3f2ef' stroke='#d8d6cf' stroke-width='1.0'/>
+<text x='615.5' y='305.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='8.5' fill='#b6b4ac' font-weight='normal' text-anchor='middle'>−∞</text>
+<rect x='430' y='320' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='464' y='320' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='498' y='320' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='532' y='320' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='566' y='320' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<rect x='600' y='320' width='31' height='31' rx='4' fill='#fce3d9' stroke='#eb6834' stroke-width='0.9'/>
+<text x='418' y='306' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#0b0b0b' font-weight='600' text-anchor='end'>query i=4</text>
+<text x='418' y='320' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='9.5' fill='#898781' font-weight='normal' text-anchor='end'>attends to 0…4</text>
+<text x='532.0' y='372' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='middle'>keys j (positions offering answers)</text>
+<text x='386' y='252.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='middle' transform='rotate(-90 386 252.0)'>queries i</text>
+<path d='M 511.6 142 L 586.4 197.6' fill='none' stroke='#898781' stroke-width='1.1' stroke-dasharray='3 3'/>
+<text x='596.6' y='138' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='start'>upper triangle = the future,</text>
+<text x='596.6' y='152' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='start'>−∞ before softmax → weight 0</text>
+<text x='648' y='304' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10' fill='#898781' font-weight='normal' text-anchor='start'>each row sums to 1</text>
+<path d='M 532.0 380 L 532.0 434' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='427.0' y='436' width='210' height='40' rx='9' fill='#fce3d9' stroke='#eb6834' stroke-width='1.5'/>
+<text x='532.0' y='453.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#0b0b0b' font-weight='600' text-anchor='middle'>out = weights @ v</text>
+<text x='532.0' y='468.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='middle'>a learned mix of payloads</text>
+<path d='M 267 248 L 310 248 L 310 456 L 425.0 456' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<text x='316' y='428' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='9.5' fill='#898781' font-weight='normal' text-anchor='start'>v — the payloads,</text>
+<text x='316' y='441' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='9.5' fill='#898781' font-weight='normal' text-anchor='start'>saved for the read-out</text>
+<line x1='532.0' y1='476' x2='532.0' y2='498' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='437.0' y='501.0' width='190' height='30' rx='15.0' fill='#f0efec' stroke='#c3c2b7' stroke-width='1.3'/>
+<text x='532.0' y='519.78' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='500' text-anchor='middle'>fresh vector per position</text>
+<text x='40' y='566' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>Everything here is Part I machinery — Linear, reshape, @, softmax — so backward() differentiates it automatically.</text>
+</svg>
