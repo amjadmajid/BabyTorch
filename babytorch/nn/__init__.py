@@ -1,8 +1,18 @@
-from .nn import Sequential
-from .nn import Linear
-from .nn import Conv2D
-from .nn import Flatten
-from .nn import ReLU
-from .nn import Tanh
-from .nn import Sigmoid
+from .nn import (
+    Module,
+    Sequential,
+    Linear,
+    Embedding,
+    LayerNorm,
+    Dropout,
+    Conv2D,
+    MaxPool2D,
+    Flatten,
+    ReLU,
+    Tanh,
+    Sigmoid,
+    GELU,
+    Softmax,
+)
 from .loss import MSELoss, CrossEntropyLoss
+from . import functional

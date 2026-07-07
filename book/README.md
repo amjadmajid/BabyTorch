@@ -1,0 +1,91 @@
+# The BabyTorch Book
+
+*How deep learning frameworks work — and how a GPT is built — explained
+through a codebase small enough to actually read.*
+
+BabyTorch is a working deep learning framework in roughly two thousand
+lines of commented Python. It mirrors the PyTorch API, runs on CPU
+(NumPy) or GPU (CuPy), and is capable enough to train a small GPT that
+writes Shakespeare-flavoured text. This book is the guided tour: it
+walks through the ideas in the same order the code builds them up, and
+every chapter links to the real source files so you can check each claim
+against the implementation.
+
+**The promise:** if you can read Python, then by the end of Part II
+there will be no magic left — not in `backward()`, not in `Adam`, not in
+attention. You will have seen every moving part of a working language
+model.
+
+## How to read this book
+
+Read it next to the code. Each chapter is short and ends with the source
+files it explained; the code comments and the book are written as two
+halves of the same explanation. Snippets marked **Try it** run as-is in
+a Python session from the repo root (after `pip install -e .`).
+
+You need: comfortable Python, high-school algebra, and one calculus
+idea — the derivative as "how much does the output move when I nudge an
+input". Everything else is introduced when it is needed.
+
+## Part I — The engine
+
+*How a deep learning framework works, from the array up.*
+
+| Chapter | What you will understand |
+|---------|--------------------------|
+| [1. Tensors](01-tensors.md) | The data structure everything else is made of: n-dimensional arrays, shapes, broadcasting, and how the same code runs on CPU or GPU. |
+| [2. Autograd](02-autograd.md) | The heart of the framework: the computation graph, the chain rule, and how `loss.backward()` computes every gradient automatically. |
+| [3. Neural networks](03-neural-networks.md) | How `Module`, `Linear`, activations, and loss functions turn raw tensors into trainable models. |
+| [4. Training](04-training.md) | The four-step training loop, the optimizers (SGD → Adam → AdamW), learning-rate schedules, and how to tell whether learning is actually happening. |
+
+## Part II — BabyGPT
+
+*From raw text to a working language model.*
+
+| Chapter | What you will understand |
+|---------|--------------------------|
+| [5. Tokenization](05-tokenization.md) | How text becomes numbers: character tokenizers, Byte Pair Encoding (the GPT approach), and where next-token training pairs come from. |
+| [6. Attention](06-attention.md) | The mechanism that made large language models possible: queries, keys, values, the causal mask, and multiple heads. |
+| [7. The Transformer](07-transformer.md) | Assembling attention and MLPs into blocks, and blocks into a GPT — residuals, LayerNorm, and the output head. |
+| [8. Training a GPT](08-training-a-gpt.md) | Pretraining on raw text, generating with temperature and top-k, and finetuning the result on a new corpus. |
+
+Part II has a companion you can run: the [BabyGPT
+tutorial](../tutorials/llm/README.md) pretrains, finetunes and samples a
+real model with the exact code these chapters explain.
+
+## The map of the code
+
+Everything the book covers lives in these files:
+
+```
+babytorch/
+├── backend.py            ch. 1  NumPy-or-CuPy selection ("xp")
+├── engine/
+│   ├── tensor.py         ch. 1-2  the Tensor + backward()
+│   └── operations.py     ch. 2  every op's forward and backward
+├── nn/
+│   ├── nn.py             ch. 3  Module, Linear, LayerNorm, ...
+│   ├── loss.py           ch. 3  MSELoss, CrossEntropyLoss
+│   └── functional.py     ch. 3  the same ops as plain functions
+├── optim/
+│   ├── optim.py          ch. 4  SGD, Adam, AdamW
+│   └── lr_scheduler.py   ch. 4  StepLR, CosineWarmupLR, ...
+├── text/
+│   └── tokenizers.py     ch. 5  CharTokenizer, BPETokenizer
+└── datasets/             ch. 4-5  DataLoader, MNIST, Tiny Shakespeare
+
+tutorials/llm/
+├── model.py              ch. 6-7  CausalSelfAttention, Block, GPT
+├── train.py              ch. 8  pretraining
+├── generate.py           ch. 8  sampling
+└── finetune.py           ch. 8  finetuning
+```
+
+A fair warning about what "baby" means: BabyTorch chooses the readable
+implementation over the fast one, everywhere. Real frameworks fuse
+kernels, manage memory pools, and parallelize across devices; the
+*ideas*, however, are exactly the ones in this book.
+
+---
+
+Start here → [Chapter 1: Tensors](01-tensors.md)

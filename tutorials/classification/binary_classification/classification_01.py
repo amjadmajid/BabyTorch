@@ -1,88 +1,104 @@
-import babytorch.nn as b_nn
-from babytorch.nn import MSELoss
-from babytorch.optim import SGD 
-from babytorch import Tensor
-from babytorch import Grapher
+"""Binary classification on a four-example toy dataset.
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
+The BabyTorch model always runs.  If PyTorch happens to be installed, the
+identical model is trained there too, so you can compare the two
+frameworks' losses and predictions side by side -- and see that the API
+really is the same with the word "baby" removed.
+
+Run it::
+
+    python classification_01.py
+"""
+
 import numpy as np
 
-def babytorch_classification(input, target, num_iterations=1000, lr=0.001):
+import babytorch.nn as b_nn
+from babytorch.nn import MSELoss
+from babytorch.optim import SGD
+from babytorch import Tensor, Grapher
+
+
+def babytorch_classification(x, target, num_iterations=1000, lr=0.001):
     print("babytorch_classification")
     model = b_nn.Sequential(
-            b_nn.Linear(len(input_data[-1]), 4, b_nn.Sigmoid()), 
-            b_nn.Linear(4, 1))
+        b_nn.Linear(x.shape[1], 4, b_nn.Sigmoid()),
+        b_nn.Linear(4, 1),
+    )
 
-    mse = MSELoss()
+    criterion = MSELoss()
     optimizer = SGD(model.parameters(), learning_rate=lr)
 
-    losses=[]
-    # compute the output of the MLP model
-    for i in range(num_iterations):
-        model.zero_grad()
-        y_pred =  model(input)  
-        loss = mse(y_pred, target)
+    losses = []
+    for _ in range(num_iterations):
+        predictions = model(x)
+        loss = criterion(predictions, target)
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        losses.append(loss.item())
+    return predictions, losses
 
-        losses.append(loss.data)
-        # print(f"{num_iterations+1} - babytorch loss: {loss.data}")
-    return  y_pred, losses
 
-# ----------------PyTorch----------------
-def pytorch_classification(input, target, num_iterations=1000, lr=0.001):
+def pytorch_classification(x, target, num_iterations=1000, lr=0.001):
     print("pytorch_classification")
-    torch_model = nn.Sequential(
-        nn.Linear(len(input_data[-1]), 4), # Input layer to hidden layer 1
-        nn.Sigmoid(),       # Activation for hidden layer 1
-        nn.Linear(4, 1)  # Hidden layer 2 to output layer
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+
+    model = nn.Sequential(
+        nn.Linear(x.shape[1], 4),
+        nn.Sigmoid(),
+        nn.Linear(4, 1),
     )
 
     criterion = nn.MSELoss()
-    optimizer = optim.SGD(torch_model.parameters(), lr=lr)
+    optimizer = optim.SGD(model.parameters(), lr=lr)
 
     losses = []
-    for i in range(num_iterations):
-        optimizer.zero_grad()  # Reset gradients
-        y_pred = torch_model(input)
-        loss = criterion(y_pred, target)
+    for _ in range(num_iterations):
+        predictions = model(x)
+        loss = criterion(predictions, target)
+        optimizer.zero_grad()
         loss.backward()
-        optimizer.step()  # Update parameters
+        optimizer.step()
         losses.append(loss.item())
-        # print(f"{i+1} - Pytorch loss: {loss.data}")
+    return predictions.detach().numpy(), losses
 
-    return  y_pred.cpu().detach().numpy() , losses
 
 if __name__ == '__main__':
-    input_data = np.array( [[1, 1,-1], 
-                            [1, 1, 1], 
-                            [1,-1,-1], 
-                            [1,-1, 1], 
-                            ])
+    input_data = np.array([[1, 1, -1],
+                           [1, 1, 1],
+                           [1, -1, -1],
+                           [1, -1, 1]], dtype=np.float32)
 
-    # generally the target shape should match the output shape of the model (batch_size, output_size)
-    target = np.array( [ [1], [-1], [-1], [-1] ] ) 
+    # The target shape matches the model's output shape: (batch_size, 1).
+    target = np.array([[1], [-1], [-1], [-1]], dtype=np.float32)
 
-    t_x = Tensor(input_data )
-    t_y = Tensor(target )
-    p_x = torch.tensor( input_data, dtype=torch.float32 )
-    p_y = torch.tensor( target, dtype=torch.float32 )
+    babytorch_y_pred, babytorch_losses = babytorch_classification(
+        Tensor(input_data), Tensor(target), num_iterations=10000, lr=0.01)
 
-    pytorch_y_pred, pytorch_losses =  pytorch_classification(p_x, p_y, num_iterations=10000)
-    babytorch_y_pred, babytorch_losses = babytorch_classification(input=t_x, target=t_y, num_iterations=10000)
+    try:
+        import torch
+        pytorch_y_pred, pytorch_losses = pytorch_classification(
+            torch.tensor(input_data), torch.tensor(target),
+            num_iterations=10000, lr=0.01)
+    except ImportError:
+        pytorch_y_pred, pytorch_losses = None, None
+        print("PyTorch is not installed -- skipping the comparison run.")
 
-    print("Predictions vs True Labels:")
-    print(f"babytorch Prediction |  Pytorch Prediction:| True value ")
-    # print(f"{babytorch_y_pred.data=}, {pytorch_y_pred=}, {target=}")
-    for t_pred, p_pred, true in zip(babytorch_y_pred.data, pytorch_y_pred ,target ):      
-        print(f"  {t_pred[0] :9.4f}         | {p_pred[0]:10.4f}          | {true[0]:2.4f}")
+    print("\nPredictions vs true labels:")
+    predictions = babytorch_y_pred.numpy()
+    if pytorch_y_pred is not None:
+        print("BabyTorch | PyTorch | true")
+        for b, p, t in zip(predictions, pytorch_y_pred, target):
+            print(f"{b[0]:9.4f} | {p[0]:7.4f} | {t[0]:4.1f}")
+    else:
+        print("BabyTorch | true")
+        for b, t in zip(predictions, target):
+            print(f"{b[0]:9.4f} | {t[0]:4.1f}")
 
-    #  Plot the loss
-    G = Grapher()
-    # G.show_graph(loss)
-    G.plot_loss(pytorch_losses, label='PyTorch')
-    G.plot_loss(babytorch_losses, label='babytorch')
-    G.show()
-
+    grapher = Grapher()
+    grapher.plot_loss(babytorch_losses, label='BabyTorch')
+    if pytorch_losses is not None:
+        grapher.plot_loss(pytorch_losses, label='PyTorch')
+    grapher.show()

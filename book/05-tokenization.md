@@ -1,0 +1,163 @@
+# Chapter 5 — Tokenization
+
+*Part II, chapter 1 of 4. Part I built a complete learning machine.
+Part II points it at language. First problem: neural networks eat
+numbers, and we have text.*
+
+## What a language model actually does
+
+Strip away the mystique and a language model is a classifier from
+chapter 3: given the text so far, **predict the next piece of text**.
+
+```
+input:  "To be, or not to b"      ->  model  ->  "e"  (probably)
+```
+
+One prediction is unimpressive. The trick is *iteration*: append the
+predicted piece, predict again, and again — and the model writes
+(chapter 8). Every capability of GPT-style models is trained through
+this one objective: get better at guessing what comes next.
+
+But a classifier needs a fixed set of classes to choose among, and
+numeric inputs. So before any modelling we must decide: what are the
+*pieces* of text? That decision is called **tokenization**, and it fixes
+the model's vocabulary — the alphabet of everything it will ever read
+or say:
+
+```
+   text ──encode──►  [18, 47, 32, 1]  ──model──►  [32]  ──decode──►  text
+              (token ids: plain integers)
+```
+
+Both tokenizers below live in
+[`babytorch/text/tokenizers.py`](../babytorch/text/tokenizers.py), and
+both are two-way maps between strings and integer ids.
+
+## The simplest answer: one token per character
+
+`CharTokenizer` scans a corpus, collects every distinct character, and
+numbers them alphabetically:
+
+```python
+>>> from babytorch.text import CharTokenizer
+>>> tok = CharTokenizer("hello world")
+>>> tok.chars                      # the whole vocabulary
+[' ', 'd', 'e', 'h', 'l', 'o', 'r', 'w']
+>>> tok.vocab_size
+8
+>>> tok.encode("low")
+[4, 5, 7]
+>>> tok.decode([4, 5, 7])
+'low'
+```
+
+Character-level tokenization is honest and tiny — Tiny Shakespeare
+needs only ~65 tokens — and it is what BabyGPT uses, because it makes
+every part of the pipeline transparent: nothing is hidden inside the
+tokens. The cost: sequences get long (one token per letter), and the
+model must burn capacity learning to *spell* before it can learn to
+*write*.
+
+The opposite extreme, one token per **word**, has the mirror problem: a
+vocabulary of hundreds of thousands, an embedding row for each, and
+total blindness to any word not seen in training (`"untokenizable"` →
+`???`).
+
+## The GPT answer: Byte Pair Encoding
+
+BPE finds the middle ground automatically: **let the corpus itself
+decide what the pieces are.** Frequent sequences deserve their own
+token; rare ones can stay split into parts. The training algorithm is
+four lines of English:
+
+1. Start with the vocabulary = individual characters.
+2. Count every adjacent pair of tokens in the corpus.
+3. Merge the most frequent pair into one new token.
+4. Repeat until the vocabulary reaches the target size.
+
+Watch it run on a six-word corpus (real output from `BPETokenizer`):
+
+```python
+>>> from babytorch.text import BPETokenizer
+>>> tok = BPETokenizer().fit("low lower lowest new newer newest",
+...                          vocab_size=20)
+>>> list(tok.merges.items())[:5]        # the first learned merge rules
+[(('w', 'e'), 'we'),        # "we" occurs in lower/lowest/newer/newest...
+ (('l', 'o'), 'lo'),        # ...so it merges first; then "lo",
+ (('n', 'e'), 'ne'),        # then "ne",
+ (('w', '</w>'), 'w</w>'),
+ (('lo', 'we'), 'lowe')]    # merges of merges: pieces grow
+>>> tok.encode("lowest")
+[13, 16]
+>>> [tok.inverse_vocab[i] for i in tok.encode("lowest")]
+['lowe', 'st</w>']          # two subwords, not six characters
+```
+
+Two details worth noticing:
+
+* **`</w>` is an end-of-word marker** appended to every word before
+  training. It lets the vocabulary distinguish "low at the end of a
+  word" from "low inside *lowest*", and it stops merges from gluing
+  separate words together. When decoding, `</w>` becomes a space.
+* **Encoding = replaying the merges.** To tokenize new text, split it
+  into characters and apply the learned merge rules in the order they
+  were learned. Common words collapse into single tokens; a rare word
+  degrades gracefully into subword pieces — never into `???`.
+
+This is genuinely the algorithm behind GPT-2/3/4's tokenizers (theirs
+start from *bytes* rather than characters and add heavy optimization,
+but the merge loop is the same). The `vocab_size` knob trades sequence
+length against vocabulary size; production models settle around
+50,000–100,000 tokens.
+
+## From tokens to training pairs — labels for free
+
+A tokenized corpus is one long array of ids:
+
+```python
+data = np.array(tokenizer.encode(text))     # e.g. 1,115,394 ids for Shakespeare
+```
+
+Now the beautiful part. Chapter 3's classifiers needed hand-made labels.
+Next-token prediction gets them **from the raw text itself**: the label
+for any position is simply the token that actually came next. Cut a
+window of `block_size` tokens for the input `x`, and the same window
+shifted one step right for the target `y`:
+
+```
+corpus:   ... F i r s t   C i t i z e n ...
+                │ │ │ │ │ │ │ │
+   x:         [ i r s t   C i t ]        one training example
+   y:         [ r s t   C i t i ]        its labels: x shifted by one
+                ▲
+                └─ y[t] is the token that really followed x[..t]
+```
+
+One window of length `T` yields `T` prediction exercises at once —
+position 0 predicts from 1 token of context, position 1 from 2 tokens,
+and so on. `get_batch` in
+[`tutorials/llm/common.py`](../tutorials/llm/common.py) does exactly
+this: pick `batch_size` random offsets, stack the windows into an
+`x, y` pair of shape `(B, T)`.
+
+This is **self-supervision**, and it is the reason language models
+could grow so large: every scrap of text on Earth is pre-labelled
+training data for the objective "guess the next token". No annotators
+required.
+
+So text is now integer tensors, with targets. But an integer id is a
+meaningless name — id 13 is not "more than" id 12. The model's first
+move will be to swap each id for a learned *vector* that can carry
+meaning (chapter 3's `Embedding`). What happens after that — how
+position 7 gets to consult positions 0–6 before making its guess — is
+the architecture that changed everything.
+
+---
+
+**Source files for this chapter:**
+[`babytorch/text/tokenizers.py`](../babytorch/text/tokenizers.py) (both tokenizers) ·
+[`babytorch/datasets/text.py`](../babytorch/datasets/text.py) (Tiny Shakespeare) ·
+[`tutorials/llm/common.py`](../tutorials/llm/common.py) (`get_batch`) ·
+[`tests/test_tokenizer.py`](../tests/test_tokenizer.py)
+
+[← Chapter 4: Training](04-training.md) | [Contents](README.md) | [Chapter 6: Attention →](06-attention.md)
