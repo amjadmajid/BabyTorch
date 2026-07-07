@@ -133,6 +133,46 @@ directly to the weights instead of being mixed into the gradient (where
 Adam's per-parameter scaling would distort it). Regularizes better in
 practice — this is what GPTs train with, including ours in chapter 8.
 
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/optim/optim.py</code> (SGD's step, then AdamW's)</summary>
+
+```python
+    def step(self):
+        for i, p in enumerate(self.params):
+            if p.grad is None:
+                continue
+            grad = p.grad
+            if self.weight_decay > 0:
+                grad = grad + self.weight_decay * p.data
+            if self.momentum > 0:
+                if self.velocities[i] is None:
+                    self.velocities[i] = xp.zeros_like(p.data)
+                self.velocities[i] = self.momentum * self.velocities[i] + grad
+                grad = self.velocities[i]
+            p.data -= self.learning_rate * grad
+    # ...
+    def step(self):
+        self.t += 1
+        for i, p in enumerate(self.params):
+            if p.grad is None:
+                continue
+            grad = p.grad
+
+            self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * grad
+            self.v[i] = self.beta2 * self.v[i] + (1 - self.beta2) * grad * grad
+
+            m_hat = self.m[i] / (1 - self.beta1 ** self.t)
+            v_hat = self.v[i] / (1 - self.beta2 ** self.t)
+
+            # Decoupled decay: shrink the weight directly...
+            if self.weight_decay > 0:
+                p.data -= self.learning_rate * self.weight_decay * p.data
+            # ...then take the adaptive step.
+            p.data -= self.learning_rate * m_hat / (xp.sqrt(v_hat) + self.eps)
+```
+
+</details>
+
 ## Learning-rate schedules
 
 A rate that is right at step 0 is usually too big near the end — early
@@ -158,6 +198,31 @@ lr │        ╭──╮
 The warmup matters because Adam's running averages are garbage for the
 first few dozen steps — small steps until its statistics stabilize, then
 full speed, then a smooth cosine descent.
+
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/optim/lr_scheduler.py</code></summary>
+
+```python
+    def __init__(self, optimizer, warmup_steps, total_steps, min_lr=0.0):
+        super().__init__(optimizer)
+        assert 0 <= warmup_steps < total_steps
+        self.warmup_steps = warmup_steps
+        self.total_steps = total_steps
+        self.min_lr = min_lr
+
+    def step(self, t):
+        if t < self.warmup_steps:
+            lr = self.base_lr * (t + 1) / self.warmup_steps
+        elif t >= self.total_steps:
+            lr = self.min_lr
+        else:
+            progress = (t - self.warmup_steps) / (self.total_steps - self.warmup_steps)
+            cosine = 0.5 * (1.0 + math.cos(math.pi * progress))   # 1 -> 0
+            lr = self.min_lr + (self.base_lr - self.min_lr) * cosine
+        self.optimizer.learning_rate = lr
+```
+
+</details>
 
 ## Did it actually learn? Train vs. validation
 

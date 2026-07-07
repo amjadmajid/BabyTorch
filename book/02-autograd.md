@@ -179,6 +179,75 @@ push gradients to its inputs, its own output gradient is already
 complete. That is the entire algorithm — *backpropagation is a
 topological sort plus the chain rule.*
 
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/engine/tensor.py</code> (the whole of <code>backward()</code>, unabridged)</summary>
+
+```python
+    def backward(self, grad=None):
+        """Run backpropagation from this tensor through the whole graph.
+
+        Typically called on a scalar loss::
+
+            loss.backward()
+
+        After it returns, every tensor with ``requires_grad=True`` that
+        contributed to ``loss`` holds ``dloss/dtensor`` in its ``.grad``.
+
+        How it works, in three steps:
+
+        1. Seed the output gradient: ``dloss/dloss = 1``.
+        2. Sort the graph so every tensor comes *after* everything it
+           depends on (a *topological sort*).
+        3. Walk that order in reverse -- from the loss back to the
+           inputs -- asking each operation to convert its output gradient
+           into input gradients (chain rule), and *accumulating* them
+           (a tensor used in several places sums the gradients from all
+           of its uses).
+        """
+        if self.grad is None:
+            if grad is not None:
+                grad = xp.array(grad, dtype=self.data.dtype)
+                assert grad.shape == self.data.shape, (
+                    f"backward() gradient shape {grad.shape} must match "
+                    f"tensor shape {self.data.shape}")
+                self.grad = grad
+            else:
+                self.grad = xp.ones_like(self.data)
+
+        if not self.requires_grad:
+            return
+
+        # -- step 2: topological sort ----------------------------------
+        topo = []
+        visited = set()
+
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                if v.operation:
+                    for tensor in v.operation.inputs():
+                        build_topo(tensor)
+                topo.append(v)
+
+        build_topo(self)
+
+        # -- step 3: chain rule in reverse order ------------------------
+        for v in reversed(topo):
+            if v.operation:
+                grads = v.operation.backward(v.grad)
+                if not isinstance(grads, tuple):
+                    grads = (grads,)
+
+                for tensor, tensor_grad in zip(v.operation.inputs(), grads):
+                    if tensor.requires_grad:
+                        if tensor.grad is None:
+                            tensor.grad = tensor_grad
+                        else:
+                            tensor.grad = tensor.grad + tensor_grad
+```
+
+</details>
+
 **Why `+=` and not `=`?** A tensor used in several places receives
 gradient from each use, and the chain rule says contributions along
 different paths **add**. In our example `x` feeds both `x*x` and `3*x`;
@@ -198,6 +267,41 @@ called in `MulOperation.backward` above. The golden rule:
 ```
 broadcast (copy) in the forward pass   <=>   sum in the backward pass
 ```
+
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/engine/operations.py</code></summary>
+
+```python
+    @staticmethod
+    def sum_to_shape(grad, shape):
+        """Undo broadcasting: reduce ``grad`` back to ``shape`` by summing.
+
+        If the forward pass broadcast a tensor of ``shape`` up to
+        ``grad.shape``, each original element was copied into several
+        output positions.  By the chain rule its gradient is the *sum* of
+        the gradients at all those positions.
+
+        Two things may have happened during broadcasting, undone in order:
+
+        1. extra dimensions were prepended  -> sum them away entirely;
+        2. size-1 dimensions were stretched -> sum them back to size 1.
+
+        Example: ``bias`` of shape ``(1, 10)`` added to a batch of shape
+        ``(32, 10)`` receives a ``(32, 10)`` gradient, which is summed
+        over axis 0 back to ``(1, 10)``.
+        """
+        # 1) sum away prepended dimensions
+        while grad.ndim > len(shape):
+            grad = grad.sum(axis=0)
+        # 2) sum stretched dimensions back to size 1
+        axes = tuple(i for i, dim in enumerate(shape)
+                     if dim == 1 and grad.shape[i] != 1)
+        if axes:
+            grad = grad.sum(axis=axes, keepdims=True)
+        return grad
+```
+
+</details>
 
 ## Trust, but verify: the finite-difference check
 

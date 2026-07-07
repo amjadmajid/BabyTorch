@@ -96,6 +96,31 @@ every position** — position `t`'s logits are its guess for token
 `t+1`, having attended to positions `0..t` only. All `T` guesses train
 in parallel.
 
+<details>
+<summary><b>How it's implemented</b> — <code>tutorials/llm/model.py</code> (the forward pass, unabridged)</summary>
+
+```python
+    def forward(self, idx):
+        """idx: integer array (B, T) of token ids -> logits (B, T, vocab_size)."""
+        if isinstance(idx, Tensor):
+            idx = idx.data
+        idx = xp.asarray(idx).astype(xp.int64)
+        B, T = idx.shape
+        assert T <= self.block_size, (
+            f"sequence length {T} exceeds block size {self.block_size}")
+
+        tok = self.token_embedding(idx)                 # (B, T, C)
+        pos = self.position_embedding(xp.arange(T))     # (T, C)
+        x = self.drop(tok + pos)                        # broadcast add
+
+        for block in self.blocks:
+            x = block(x)
+        x = self.ln_f(x)
+        return self.head(x)                             # (B, T, vocab_size)
+```
+
+</details>
+
 The plain Python list of blocks deserves a remark: chapter 3's
 `Module.parameters()` walks attribute lists too, so the stack's
 parameters are found automatically, and `loss.backward()` reaches all
@@ -115,6 +140,28 @@ Flatten batch and time together and next-token prediction *is*
 classification with `V = vocab_size` classes — the exact loss from
 chapter 3, fed `B·T` examples per step. This equivalence is the
 punchline of the whole book: **a GPT is a classifier in a loop.**
+
+<details>
+<summary><b>How it's implemented</b> — <code>tutorials/llm/model.py</code> (the real one, with the type plumbing)</summary>
+
+```python
+    def loss(self, idx, targets):
+        """Cross-entropy between predictions and the shifted targets.
+
+        ``targets`` is ``(B, T)``: for each position, the id of the token
+        that actually came next.  We flatten batch and time together so the
+        loss is one big classification over all positions at once.
+        """
+        logits = self.forward(idx)                      # (B, T, vocab)
+        B, T, V = logits.shape
+        logits = logits.reshape(B * T, V)
+        if isinstance(targets, Tensor):
+            targets = targets.data
+        targets = xp.asarray(targets).astype(xp.int64).reshape(B * T)
+        return nn.CrossEntropyLoss()(logits, targets)
+```
+
+</details>
 
 ## Size: where the parameters live
 

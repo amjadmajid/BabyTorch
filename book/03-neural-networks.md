@@ -51,6 +51,27 @@ have roughly the same variance as inputs, and signals neither explode
 nor die as they pass through many layers. Getting initialization wrong
 is one of the classic ways deep networks silently fail to train.
 
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/nn/nn.py</code> (the whole layer)</summary>
+
+```python
+    def __init__(self, in_features, out_features, activation_function=None):
+        k = 1.0 / math.sqrt(in_features)
+        self.w = Tensor(xp.random.uniform(-k, k, (in_features, out_features)),
+                        requires_grad=True)
+        self.b = Tensor(xp.random.uniform(-k, k, (1, out_features)),
+                        requires_grad=True)
+        self.activation_function = activation_function
+
+    def forward(self, x):
+        out = x @ self.w + self.b
+        if self.activation_function:
+            out = self.activation_function(out)
+        return out
+```
+
+</details>
+
 ## Why we need non-linearities
 
 Stack two linear layers and you get... a linear function:
@@ -123,6 +144,47 @@ attributes**:
 the given layers in a list and `forward` feeds each one's output to the
 next.
 
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/nn/nn.py</code> (the attribute walk, and the gradient reset)</summary>
+
+```python
+    def parameters(self):
+        """Collect every trainable tensor in this module, recursively.
+
+        We look through the instance's attributes for:
+        * tensors with ``requires_grad=True``  -> parameters of this module;
+        * sub-modules                          -> ask them for theirs;
+        * lists/tuples of sub-modules          -> same (e.g. Sequential,
+          or the list of blocks in a Transformer).
+        """
+        params = []
+        for value in vars(self).values():
+            if isinstance(value, Tensor):
+                if value.requires_grad:
+                    params.append(value)
+            elif isinstance(value, Module):
+                params.extend(value.parameters())
+            elif isinstance(value, (list, tuple)):
+                for item in value:
+                    if isinstance(item, Module):
+                        params.extend(item.parameters())
+                    elif isinstance(item, Tensor) and item.requires_grad:
+                        params.append(item)
+        return params
+    # ...
+    def zero_grad(self):
+        """Reset the gradients of all parameters.
+
+        Call this after each optimizer step: ``backward()`` *accumulates*
+        gradients, so leftovers from the previous batch would otherwise
+        contaminate the next one.
+        """
+        for p in self.parameters():
+            p.grad = None
+```
+
+</details>
+
 ## Losses: turning "wrong" into a number
 
 Training needs a single scalar that says *how wrong* the model is —
@@ -160,6 +222,30 @@ log-sum-exp trick, so huge or tiny logits cannot overflow. **Keep this
 loss in mind:** a language model predicting the next token is exactly
 this classification, with `num_classes = vocabulary size`. The loss that
 trains BabyGPT in chapter 8 is this one, unchanged.
+
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/nn/loss.py</code></summary>
+
+```python
+    def forward(self, predictions, targets):
+        assert isinstance(predictions, Tensor), "predictions must be a Tensor"
+
+        # Targets may arrive as a Tensor, a list, or an array; index arrays
+        # must be integers.
+        if isinstance(targets, Tensor):
+            targets = targets.data
+        targets = xp.asarray(targets).astype(xp.int64)
+        assert targets.ndim == 1, (
+            f"targets must be a 1-D array of class ids, got shape {targets.shape}")
+        n = targets.shape[0]
+
+        log_probs = predictions.log_softmax(axis=-1)      # (n, num_classes)
+        # Pick out, for every row, the log-probability of its true class.
+        picked = log_probs[xp.arange(n), targets]          # (n,)
+        return -picked.mean()
+```
+
+</details>
 
 ## The specialists
 
