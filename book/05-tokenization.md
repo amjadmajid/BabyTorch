@@ -58,6 +58,32 @@ tokens. The cost: sequences get long (one token per letter), and the
 model must burn capacity learning to *spell* before it can learn to
 *write*.
 
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/text/tokenizers.py</code> (the whole tokenizer, essentially)</summary>
+
+```python
+    def fit(self, text):
+        """Build the vocabulary from all characters seen in ``text``."""
+        self.chars = sorted(set(text))
+        self.stoi = {ch: i for i, ch in enumerate(self.chars)}   # string -> int
+        self.itos = {i: ch for i, ch in enumerate(self.chars)}   # int -> string
+        return self
+
+    @property
+    def vocab_size(self):
+        return len(self.chars)
+
+    def encode(self, text):
+        """Text -> list of integer ids."""
+        return [self.stoi[ch] for ch in text]
+
+    def decode(self, ids):
+        """List of ids -> text."""
+        return ''.join(self.itos[int(i)] for i in ids)
+```
+
+</details>
+
 The opposite extreme, one token per **word**, has the mirror problem: a
 vocabulary of hundreds of thousands, an embedding row for each, and
 total blindness to any word not seen in training (`"untokenizable"` →
@@ -110,6 +136,54 @@ but the merge loop is the same). The `vocab_size` knob trades sequence
 length against vocabulary size; production models settle around
 50,000–100,000 tokens.
 
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/text/tokenizers.py</code> (the merge loop, and encoding by replay)</summary>
+
+```python
+    def fit(self, text, vocab_size=512, verbose=False):
+        """Learn merge rules from ``text`` up to ``vocab_size`` tokens.
+
+        A special end-of-word marker ``</w>`` is appended to each word so
+        the model can tell where words end (and doesn't merge across
+        spaces).
+        """
+        # Represent each unique word as space-separated characters + </w>.
+        words = text.split()
+        sequences = Counter(' '.join(list(w) + ['</w>']) for w in words)
+
+        # Seed the vocabulary with the base characters.
+        base = set()
+        for seq in sequences:
+            base.update(seq.split())
+        vocab = sorted(base)
+
+        while len(vocab) < vocab_size:
+            pair_counts = self._get_pair_counts(sequences)
+            if not pair_counts:
+                break
+            best = max(pair_counts, key=pair_counts.get)
+            sequences = self._merge_pair(best, sequences)
+            self.merges[best] = ''.join(best)
+            merged = ''.join(best)
+            if merged not in vocab:
+                vocab.append(merged)
+    # ...
+    def _tokenize_word(self, word):
+        """Apply the learned merges to one word, return its sub-tokens."""
+        symbols = list(word) + ['</w>']
+        # Replay merges in the order they were learned (dict preserves it).
+        for pair, merged in self.merges.items():
+            i = 0
+            while i < len(symbols) - 1:
+                if symbols[i] == pair[0] and symbols[i + 1] == pair[1]:
+                    symbols[i:i + 2] = [merged]
+                else:
+                    i += 1
+        return symbols
+```
+
+</details>
+
 ## From tokens to training pairs — labels for free
 
 A tokenized corpus is one long array of ids:
@@ -132,6 +206,28 @@ and so on. `get_batch` in
 [`tutorials/llm/common.py`](../tutorials/llm/common.py) does exactly
 this: pick `batch_size` random offsets, stack the windows into an
 `x, y` pair of shape `(B, T)`.
+
+<details>
+<summary><b>How it's implemented</b> — <code>tutorials/llm/common.py</code></summary>
+
+```python
+def get_batch(data, block_size, batch_size):
+    """Sample a random mini-batch of (context, next-token) pairs.
+
+    We pick ``batch_size`` random start positions and cut ``block_size``
+    tokens for the input ``x`` and the same window shifted one step to the
+    right for the target ``y`` -- so ``y[t]`` is the token that really
+    followed ``x[t]``.  Language modelling is next-token prediction, and
+    this is where the "next token" labels come from, for free, from raw
+    text.
+    """
+    ix = np.random.randint(0, len(data) - block_size - 1, size=batch_size)
+    x = np.stack([data[i:i + block_size] for i in ix])
+    y = np.stack([data[i + 1:i + 1 + block_size] for i in ix])
+    return x, y
+```
+
+</details>
 
 This is **self-supervision**, and it is the reason language models
 could grow so large: every scrap of text on Earth is pre-labelled

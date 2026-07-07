@@ -180,6 +180,56 @@ do not migrate to the new library after they are created. (On macOS
 there is no CUDA, so everything runs on the CPU — which works out of
 the box.)
 
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/backend.py</code></summary>
+
+```python
+class _XP:
+    """Proxy that forwards every attribute to the active array library.
+
+    Because modules bind ``xp`` once (``from .backend import xp``) but
+    every *use* is an attribute access (``xp.zeros``), routing the
+    lookup through ``__getattr__`` lets :func:`set_device` swap the
+    library underneath all of them at once.
+    """
+
+    _lib = None  # numpy or cupy, set by set_device()
+
+    def __getattr__(self, name):
+        return getattr(_XP._lib, name)
+```
+
+```python
+def set_device(name):
+    """Select the array library: ``"cpu"``, ``"cuda"`` (or ``"gpu"``), or
+    ``"auto"``.  Returns the name of the device actually selected.
+
+    Call it *before* creating tensors or models (see the module
+    docstring for why).  ``"cuda"`` raises with an explanation if no
+    usable GPU stack is present; ``"auto"`` never raises.
+    """
+    global DEVICE
+    name = name.lower()
+    if name in ("cuda", "gpu"):
+        _XP._lib = _cuda_library()
+        DEVICE = "cuda"
+    elif name == "cpu":
+        import numpy
+        _XP._lib = numpy
+        DEVICE = "cpu"
+    elif name == "auto":
+        try:
+            return set_device("cuda")
+        except Exception:
+            return set_device("cpu")
+    else:
+        raise ValueError(
+            f"unknown device {name!r}: expected 'cpu', 'cuda' or 'auto'")
+    return DEVICE
+```
+
+</details>
+
 ## A tensor that remembers where it came from
 
 So far, nothing here needed a framework — plain NumPy does all of it.
@@ -192,6 +242,48 @@ self.requires_grad = requires_grad          # should gradients flow here?
 self.grad = None                            # filled in by backward()
 self.operation = None                       # the Operation that produced this
 ```
+
+<details>
+<summary><b>How it's implemented</b> — <code>babytorch/engine/tensor.py</code></summary>
+
+```python
+class Tensor:
+    """A minimal tensor object that records operations for autodiff."""
+
+    def __init__(self, data, requires_grad=False, dtype=None,
+                 label="", _op_label=""):
+    # ...
+        # dtype=None means "keep the data's own dtype if it already has one
+        # (so operations preserve float64/float32 through the graph), and
+        # fall back to float32 for raw Python numbers/lists" -- matching
+        # PyTorch, whose default tensor type is float32.
+        if dtype is None:
+            dtype = getattr(data, "dtype", None)
+            if dtype is None or not xp.issubdtype(dtype, xp.floating):
+                dtype = xp.float32
+        # asarray: reuse the buffer when possible instead of always copying
+        self.data = xp.asarray(data, dtype=dtype)
+        self.dtype = self.data.dtype
+        self.requires_grad = requires_grad
+        self.grad = None
+        self.operation = None
+        self.label = label
+        self._op_label = _op_label
+    # ...
+    @property
+    def shape(self):
+        return self.data.shape
+    # ...
+    def item(self):
+        """Return the value of a single-element tensor as a Python number."""
+        return self.data.item()
+
+    def numpy(self):
+        """Return the data as a NumPy array on the CPU (copies from GPU)."""
+        return to_numpy(self.data)
+```
+
+</details>
 
 Three extra fields. `data` we have covered; the other three exist for
 one purpose: **every tensor remembers which operation created it, and

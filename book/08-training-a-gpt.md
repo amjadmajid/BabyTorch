@@ -92,6 +92,37 @@ tokens, zero the rest, renormalize. It cuts off the long tail of
 individually-unlikely junk tokens whose *combined* probability is large
 enough to derail a sentence.
 
+<details>
+<summary><b>How it's implemented</b> — <code>tutorials/llm/model.py</code> (the writing loop, unabridged)</summary>
+
+```python
+        idx = xp.asarray(idx).astype(xp.int64)
+        if idx.ndim == 1:
+            idx = idx[None, :]
+
+        self.eval()
+        with babytorch.no_grad():
+            for _ in range(max_new_tokens):
+                # Never feed more than block_size tokens of context.
+                idx_cond = idx[:, -self.block_size:]
+                logits = self.forward(idx_cond).data      # (B, T, vocab)
+                logits = logits[:, -1, :] / temperature   # last step: (B, vocab)
+
+                if top_k is not None:
+                    k = min(top_k, logits.shape[-1])
+                    # Zero out everything below the k-th largest logit.
+                    kth = xp.sort(logits, axis=-1)[:, -k][:, None]
+                    logits = xp.where(logits < kth, -xp.inf, logits)
+
+                # Softmax -> probabilities, then sample one token per row.
+                probs = _softmax_np(logits)
+                next_id = _sample(probs)                  # (B, 1)
+                idx = xp.concatenate([idx, next_id], axis=1)
+        return idx
+```
+
+</details>
+
 ## Finetuning: same loop, new voice
 
 [`finetune.py`](../tutorials/llm/finetune.py) is `train.py` with three

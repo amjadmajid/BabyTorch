@@ -113,6 +113,31 @@ GPT-style (decoder-only) model and a bidirectional one like BERT — and
 it is why generation (chapter 8) works: the model was never allowed to
 rely on information it won't have.
 
+<details>
+<summary><b>How it's implemented</b> — <code>tutorials/llm/model.py</code> (the mask is built once, as a constant)</summary>
+
+```python
+    def __init__(self, n_embd, n_head, block_size, dropout=0.0):
+        assert n_embd % n_head == 0, "n_embd must be divisible by n_head"
+        self.n_head = n_head
+        self.head_size = n_embd // n_head
+
+        # One linear layer produces query, key and value together (3 * n_embd),
+        # which we split apart after -- cheaper than three separate layers.
+        self.qkv = nn.Linear(n_embd, 3 * n_embd)
+        self.proj = nn.Linear(n_embd, n_embd)  # mixes the heads back together
+        self.attn_dropout = nn.Dropout(dropout)
+        self.resid_dropout = nn.Dropout(dropout)
+
+        # A constant (T, T) matrix: 0 where attention is allowed, a large
+        # negative number where it is forbidden (the future).  Added to the
+        # scores before softmax, the -1e9 entries become ~0 probability.
+        mask = xp.triu(xp.full((block_size, block_size), -1e9), k=1)
+        self.mask = Tensor(mask)  # not a parameter: requires_grad is False
+```
+
+</details>
+
 Here is the whole head at a glance — projections, masked score
 triangle, and the value read-out:
 
