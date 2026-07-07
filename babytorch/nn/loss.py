@@ -1,76 +1,75 @@
-from babytorch.engine import Tensor
+"""Loss functions: how wrong is the model, as a single number?
+
+A loss function compares the model's predictions with the true targets
+and boils the mismatch down to one scalar.  That scalar is the tensor we
+call ``.backward()`` on -- everything the model learns starts here.
+
+Both losses below are built entirely out of Tensor operations, so their
+backward passes come for free from the autodiff engine.
+"""
+
+from ..backend import xp
+from ..engine import Tensor
+
 
 class MSELoss:
+    """Mean Squared Error -- the go-to loss for regression.
+
+    ``loss = mean( (prediction - target)^2 )``
+
+    Squaring does two jobs: errors in both directions count as positive,
+    and large errors are punished much more than small ones.
+    """
+
     def __call__(self, predictions, targets):
         return self.forward(predictions, targets)
-    
+
     def forward(self, predictions, targets):
         assert isinstance(predictions, Tensor), "predictions must be a Tensor"
-        assert isinstance(targets, Tensor), "targets must be a Tensor"
-
+        if not isinstance(targets, Tensor):
+            targets = Tensor(targets)
         diff = predictions - targets
-
-        squared_diff = diff * diff
-        # sum the squared differences and then divide by the number of elements to compute the mean
-        loss = squared_diff.sum() / predictions.data.size
-
-        return loss
-    
-    def backward(self, grad=None):
-        # Assuming we call backward on the loss Tensor, this will compute gradients
-        # We don't implement the backward pass here since our framework will handle that.
-        pass
+        return (diff * diff).mean()
 
 
 class CrossEntropyLoss:
-    def __call__(self, predictions, labels):
-        return self.forward(predictions, labels)
+    """Cross-entropy -- the go-to loss for classification (and LLMs!).
 
-    def forward(self, predictions, labels):
-        # Softmax function to convert raw scores to probabilities
-        # using the max trick to avoid numerical overflow errors (to stablize the computation of the exponentials)
-        
-        labels_len = len(labels)
+    The model outputs one raw score ("logit") per class.  Cross-entropy
 
-        # print("predictions: ", predictions)
-        # exit()
-        epsilon = Tensor(1e-8, requires_grad=True)
+    1. turns the scores into probabilities with softmax, then
+    2. looks at the probability given to the *correct* class, and
+    3. charges ``-log`` of it.
 
-        max_vals = predictions.max(axis=1, keepdims=True)
-        # print("max_vals: ", max_vals)
-        exps = (predictions - max_vals).exp()
-        # print("exps: ", exps)
-        softmax = exps / exps.sum(axis=1, keepdims=True)
+    ``-log(p)`` is tiny when the model was confident and right
+    (p close to 1), and huge when it was confident and wrong (p close to 0).
 
-        # print("softmax: ", softmax)
-        # exit()
+    We compute steps 1-2 together with ``log_softmax`` (the log-sum-exp
+    trick) instead of an actual softmax followed by ``log`` -- same math,
+    but immune to overflow/underflow.
 
-        selected_probs = softmax[range(labels_len), labels.data] # we cannot index Tensor. This has to be fixed
+    Shapes: ``predictions`` is ``(batch, num_classes)`` and ``targets``
+    holds one integer class id per row, e.g. ``[2, 0, 1, ...]``.
+    A language model predicting the next token is exactly this with
+    ``num_classes = vocabulary size``.
+    """
 
-        # TODO: This is a workaround. Tensor supports indexing with a list of indices, 
-        # but not with a Tensor of indices. This must be fixed
-        # selected_probs = Tensor(selected_probs, requires_grad=True)
+    def __call__(self, predictions, targets):
+        return self.forward(predictions, targets)
 
-        # print("selected_probs: ", selected_probs)
-        # print("selected_probs: ", selected_probs + epsilon)
-        # exit()
-        # log_likelihood = (-selected_probs + epsilon).log()
-        neg_tensor = Tensor(-1, requires_grad=True)
-        log_likelihood = (selected_probs + epsilon).log() * neg_tensor
-        # print("log_likelihood: ", neg_tensor * log_likelihood)
-        # exit()
+    def forward(self, predictions, targets):
+        assert isinstance(predictions, Tensor), "predictions must be a Tensor"
 
-        # average the loss over the batch size (this is consistent with most deep learning frameworks)
-        loss = log_likelihood.sum() / labels_len
+        # Targets may arrive as a Tensor, a list, or an array; index arrays
+        # must be integers.
+        if isinstance(targets, Tensor):
+            targets = targets.data
+        targets = xp.asarray(targets).astype(xp.int64)
+        assert targets.ndim == 1, (
+            f"targets must be a 1-D array of class ids, got shape {targets.shape}")
+        n = targets.shape[0]
 
-        # print("loss: ", loss.operation.inputs()[0].operation.inputs()[0].operation.inputs()[0].operation.inputs()[0].operation )
-        # exit()
-        return loss
-
-    def backward(self, grad=None):
-        # Assuming we call backward on the loss Tensor, this will compute gradients
-        # We don't implement the backward pass here since our framework will handle that.
-        pass
-
-
-
+        log_probs = predictions.log_softmax(axis=-1)      # (n, num_classes)
+        # Pick out, for every row, the log-probability of its true class.
+        picked = log_probs[xp.arange(n), targets]          # (n,)
+        return -picked.mean()
