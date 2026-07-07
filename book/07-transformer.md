@@ -89,25 +89,7 @@ class GPT(nn.Module):
         self.head = nn.Linear(n_embd, vocab_size)
 ```
 
-```
- token ids (B, T)
-     │
-     ├─► token_embedding ────► what each token is   ─┐
-     │                                                (+) ─► dropout ─► x (B,T,C)
-     └─► position_embedding ─► where each token sits ─┘
-     ┌───────────────────────────────────────────┐
-     │            Block × n_layer                │
-     │   x = x + attn(ln1(x))   ← communicate    │
-     │   x = x + mlp(ln2(x))    ← compute        │
-     └───────────────────────────────────────────┘
-     │
-     ▼
-   final LayerNorm ──► head: Linear(C → vocab_size)
-     │
-     ▼
- logits (B, T, vocab_size):  at every position, a score for
-                             every token that could come next
-```
+![The full BabyGPT architecture, read bottom-up: token ids enter token and position embeddings, which are added and dropped out; six identical Transformer blocks each apply LayerNorm, causal self-attention, a residual add, LayerNorm, the MLP and another residual add; a final LayerNorm and the Linear output head produce logits of shape B by T by 65 — with a model card of the train.py defaults on the right](figures/fig-babygpt.svg)
 
 Note what the output is: not one prediction, but a prediction **at
 every position** — position `t`'s logits are its guess for token

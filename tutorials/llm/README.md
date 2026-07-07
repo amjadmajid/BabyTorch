@@ -63,29 +63,9 @@ produce word-shaped text:
 python train.py --steps 1500 --block_size 64 --n_embd 96 --n_head 4 --n_layer 4
 ```
 
-## How the model reads and writes text
+## The architecture
 
-```
-  "To be"                                        " or"
-    │                                              ▲
-    ▼                                              │
- tokenizer                                     tokenizer
- (chars→ids)                                   (ids→chars)
-    │                                              │
-    ▼                                              │
- [44, 51, 1, 40, 47]                          argmax / sample
-    │                                              ▲
-    ▼                                              │
- token + position embeddings                   logits over the
-    │                                           whole vocabulary
-    ▼                                              ▲
- ┌───────────────── N × Transformer Block ─────────────────┐
- │  LayerNorm → CausalSelfAttention → +residual            │
- │  LayerNorm → MLP (GELU)           → +residual           │
- └──────────────────────────────────────────────────────────┘
-    │                                              ▲
-    └──────────────► final LayerNorm ─────────────┘
-```
+![The full BabyGPT architecture, read bottom-up: token ids enter token and position embeddings, six identical Transformer blocks each apply LayerNorm, causal self-attention, a residual add, LayerNorm, the MLP and another residual add, and a final LayerNorm plus the Linear output head produce next-token logits — with a model card of the train.py defaults on the right](../../book/figures/fig-babygpt.svg)
 
 Each Transformer block does two things: **attention** lets every position
 gather information from earlier positions, and the **MLP** then processes

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 470" width="880" height="470" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<defs>
+<marker id="arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#52514e"/>
+</marker>
+<marker id="arr-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#e34948"/>
+</marker>
+<marker id="arr-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 1 L 9 5 L 0 9 z" fill="#2a78d6"/>
+</marker>
+</defs>
+<rect x="0.5" y="0.5" width="879" height="469" rx="14" fill="#fcfcfb" stroke="rgba(11,11,11,0.10)"/>
+<text x='32' y='42' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='17' fill='#0b0b0b' font-weight='700' text-anchor='start'>The four-step loop that trains everything</text>
+<text x='32' y='63' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='12' fill='#52514e' font-weight='normal' text-anchor='start'>from the two-line regression to BabyGPT — only the model and the data change</text>
+<rect x='75.0' y='123.0' width='250' height='74' rx='9' fill='#ddeafa' stroke='#2a78d6' stroke-width='1.5'/>
+<text x='200' y='157.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='14' fill='#0b0b0b' font-weight='600' text-anchor='middle'>1 · forward</text>
+<text x='200' y='172.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11' fill='#52514e' font-weight='normal' text-anchor='middle'>predictions = model(x)</text>
+<rect x='535.0' y='123.0' width='250' height='74' rx='9' fill='#fadcdc' stroke='#e34948' stroke-width='1.5'/>
+<text x='660' y='157.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='14' fill='#0b0b0b' font-weight='600' text-anchor='middle'>2 · loss</text>
+<text x='660' y='172.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11' fill='#52514e' font-weight='normal' text-anchor='middle'>loss = criterion(predictions, y)</text>
+<rect x='535.0' y='293.0' width='250' height='74' rx='9' fill='#fadcdc' stroke='#e34948' stroke-width='1.5'/>
+<text x='660' y='327.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='14' fill='#0b0b0b' font-weight='600' text-anchor='middle'>3 · backward</text>
+<text x='660' y='342.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11' fill='#52514e' font-weight='normal' text-anchor='middle'>loss.backward()</text>
+<rect x='75.0' y='293.0' width='250' height='74' rx='9' fill='#fcedcc' stroke='#eda100' stroke-width='1.5'/>
+<text x='200' y='327.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='14' fill='#0b0b0b' font-weight='600' text-anchor='middle'>4 · update</text>
+<text x='200' y='342.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='11' fill='#52514e' font-weight='normal' text-anchor='middle'>optimizer.step()</text>
+<line x1='333.0' y1='160' x2='525.0' y2='160' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<text x='430.0' y='148' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='middle'>how wrong?</text>
+<line x1='660' y1='203.0' x2='660' y2='283.0' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<text x='680' y='249.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>a gradient for</text>
+<text x='680' y='264.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='start'>every parameter</text>
+<line x1='527.0' y1='330' x2='335.0' y2='330' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<text x='430.0' y='356' font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='middle'>p = p − learning_rate · grad</text>
+<path d='M 200 287.0 L 200 231.0 L 200 207.0' fill='none' stroke='#52514e' stroke-width='1.6' marker-end='url(#arr)'/>
+<rect x='114.0' y='228.0' width='172' height='34' rx='9' fill='#f0efec' stroke='#c3c2b7' stroke-width='1.5'/>
+<text x='200' y='248.78' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#0b0b0b' font-weight='600' text-anchor='middle'>optimizer.zero_grad()</text>
+<text x='100' y='248.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='end'>forget old</text>
+<text x='100' y='263.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#898781' font-weight='normal' text-anchor='end'>gradients first!</text>
+<text x='430.0' y='243.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='13' fill='#0b0b0b' font-weight='700' text-anchor='middle'>repeat</text>
+<text x='430.0' y='261.0' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='middle'>until the loss stops falling</text>
+<text x='40' y='414' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>The classic silent bug: skip zero_grad() and every batch trains on stale gradients from the last one —</text>
+<text x='40' y='430' font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size='10.5' fill='#52514e' font-weight='normal' text-anchor='start'>backward() accumulates by design, because a tensor used in several places must sum its contributions.</text>
+</svg>

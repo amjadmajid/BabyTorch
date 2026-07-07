@@ -51,15 +51,7 @@ BabyTorch did not just compute `10`. Each operation created its output
 via `Tensor._make_output`, which stores a link to the operation, and the
 operation kept references to its inputs. The result is a graph:
 
-```
-      ┌─────┐     a = x·x = 4
-  x ─►│ MUL │──► a ──┐
-  │   └─────┘        │   ┌─────┐
-  │2.0               ├──►│ ADD │──► y = 10
-  │   ┌─────┐        │   └─────┘
-  └──►│ MUL │──► b ──┘
-  3.0─┘     b = 3·x = 6
-```
+![The computation graph of y = x squared plus 3x at x = 2: solid arrows compute and record values forward; red dashed arrows replay the recording in reverse, multiplying local derivatives — and where two paths meet at x, the gradients add up to 7](figures/fig-autograd.svg)
 
 Every box knows how to compute its own local derivative. To get
 `dy/dx`, walk the graph **backwards from y**, multiplying local

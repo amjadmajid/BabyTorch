@@ -124,14 +124,7 @@ for any position is simply the token that actually came next. Cut a
 window of `block_size` tokens for the input `x`, and the same window
 shifted one step right for the target `y`:
 
-```
-corpus:   ... F i r s t   C i t i z e n ...
-                │ │ │ │ │ │ │ │
-   x:         [ i r s t   C i t ]        one training example
-   y:         [ r s t   C i t i ]        its labels: x shifted by one
-                ▲
-                └─ y[t] is the token that really followed x[..t]
-```
+![Text becomes numbers and labels come free: encode maps text to ids and decode maps them back; below, an x window over the corpus and a y window shifted one step right make every position a next-token exercise](figures/fig-tokenization.svg)
 
 One window of length `T` yields `T` prediction exercises at once —
 position 0 predicts from 1 token of context, position 1 from 2 tokens,

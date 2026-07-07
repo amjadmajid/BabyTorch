@@ -113,6 +113,11 @@ GPT-style (decoder-only) model and a bidirectional one like BERT — and
 it is why generation (chapter 8) works: the model was never allowed to
 rely on information it won't have.
 
+Here is the whole head at a glance — projections, masked score
+triangle, and the value read-out:
+
+![One head of causal self-attention: a Linear layer makes q, k and v; q @ k-transpose over the square root of head_size gives a T-by-T score table whose upper triangle (the future) is masked to minus infinity; softmax turns each row into weights that sum to 1; and out = weights @ v reads a learned mix of the payloads](figures/fig-attention.svg)
+
 ## Many heads at once
 
 One attention pattern per layer is a bottleneck: the same weights that
@@ -121,6 +126,8 @@ and rhyme. **Multi-head attention** runs `n_head` attentions in
 parallel, each in its own `head_size = C / n_head`-dimensional slice of
 the channels, free to specialize; their outputs are concatenated and
 mixed by a final projection.
+
+![Multi-head attention: the 192 channels are carved into six 32-wide heads, each running its own attention with its own score table; the heads are concatenated back to full width and a projection lets them exchange notes](figures/fig-multihead.svg)
 
 No new machinery is needed — just chapter 1's reshaping, so all heads
 compute in one batched matmul. Follow the shapes in the real code,
