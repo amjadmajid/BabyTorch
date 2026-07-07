@@ -35,6 +35,15 @@ without leaving the page. They are kept honest by a test
 ([`tests/test_book_snippets.py`](../tests/test_book_snippets.py)) that
 fails if an excerpt ever drifts from the real code.
 
+Every chapter ends with **exercises in two tracks**, so pick your
+depth. *Check yourself*: three quick questions with answers that unfold
+in place — if you just want to understand, these are enough. *Build
+it*: you implement real framework pieces (an op with its backward pass,
+an optimizer, nucleus sampling...) and a test suite grades you — see
+[`exercises/`](exercises/README.md). Solutions are included and are
+themselves verified by the main test suite, so every exercise is
+guaranteed to stay solvable.
+
 You need: comfortable Python, high-school algebra, and one calculus
 idea — the derivative as "how much does the output move when I nudge an
 input". Everything else is introduced when it is needed.

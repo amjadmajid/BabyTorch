@@ -23,6 +23,7 @@ BABYTORCH_DEVICE=cuda pytest  # run the same suite on the GPU
 | `test_training.py` | End-to-end: linear regression, an MLP solving XOR, and a **tiny GPT overfitting a sequence** (the strongest single signal that the whole Transformer path is correct). |
 | `test_pytorch_parity.py` | *Optional.* If `torch` is installed, checks BabyTorch's numbers match PyTorch's. Skipped automatically otherwise. |
 | `test_book_snippets.py` | The book's collapsible "How it's implemented" boxes quote the source verbatim — this fails if an excerpt drifts from the real code. |
+| `test_exercises.py` | The book's Build-it exercises stay healthy: pristine starters skip cleanly, and the shipped solutions pass every grader — so no exercise can quietly become unsolvable. |
 
 ## How the gradient check works
 

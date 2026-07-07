@@ -205,6 +205,53 @@ buy:
 Random weights, so the scores are noise — the model babbles. Chapter 8
 turns the babble into Shakespeare.
 
+## Exercises
+
+**Check yourself** (answers unfold):
+
+**Q1.** Which sublayer lets position 7 use information from position 2
+— attention or the MLP?
+
+<details><summary>Answer</summary>
+
+Only attention. The MLP applies the same little network at each
+position independently — it never looks sideways. Hence the block's
+rhythm: communicate (attention), then compute (MLP).
+
+</details>
+
+**Q2.** You double `block_size`. Which parameter count changes, and
+what *else* grows even though no weights do?
+
+<details><summary>Answer</summary>
+
+Only the position-embedding table (`block_size × n_embd`) gains
+parameters. But attention's *compute and memory* grow quadratically —
+the `(T, T)` score table quadruples. Context length is expensive in
+work, not in weights.
+
+</details>
+
+**Q3.** Remove the residual connections and a 12-block model stops
+training. Which chapter-2 fact explains it?
+
+<details><summary>Answer</summary>
+
+The chain rule *multiplies* local derivatives along a path — twelve
+stacked sublayers multiply twelve factors, and the product vanishes or
+explodes. Addition passes gradients through unchanged, so the residual
+chain is an unbroken highway from the loss to layer 1.
+
+</details>
+
+**Build it** — write `count_gpt_parameters` in closed form (the grader
+checks you against real models — and notice `n_head` never appears in
+your formula), then ★ perform real surgery: `TiedGPT`, GPT-2's
+weight-tying trick, in
+[`exercises/ch07_transformer.py`](exercises/ch07_transformer.py); run
+`pytest book/exercises/test_ch07_transformer.py -v`.
+([How the exercises work](exercises/README.md).)
+
 ---
 
 **Source files for this chapter:**

@@ -214,6 +214,51 @@ Attention lets positions **communicate**. What each position does with
 the information it gathered — and how these layers stack into a
 twelve-story building that stays trainable — is chapter 7.
 
+## Exercises
+
+**Check yourself** (answers unfold):
+
+**Q1.** With `T = 5`, how many of the 25 attention scores survive the
+causal mask?
+
+<details><summary>Answer</summary>
+
+15 — the lower triangle including the diagonal, `T(T+1)/2`. Each
+position sees itself and its past: 1 + 2 + 3 + 4 + 5.
+
+</details>
+
+**Q2.** Delete the `/ √head_size` scaling. What goes wrong, and through
+which mechanism?
+
+<details><summary>Answer</summary>
+
+Dot products grow with vector length, so scores get large, softmax
+saturates toward one-hot — and chapter 2's softmax backward shows the
+gradient of a nearly-certain distribution is nearly zero. Attention
+stops learning *which* positions to attend to.
+
+</details>
+
+**Q3.** Why must `n_head` divide `n_embd`?
+
+<details><summary>Answer</summary>
+
+The heads are made by *carving* the C channels into equal slices of
+`head_size = C / n_head` with a reshape — no new numbers are created,
+the same C channels are just viewed as `n_head` groups. Unequal slices
+wouldn't reshape.
+
+</details>
+
+**Build it** — write `causal_attention` from raw tensor ops (the grader
+includes the property that defines causality: *rewriting the future
+must not change the past's outputs*), and ★ the `split_heads` /
+`merge_heads` reshape pair, in
+[`exercises/ch06_attention.py`](exercises/ch06_attention.py); then run
+`pytest book/exercises/test_ch06_attention.py -v`.
+([How the exercises work](exercises/README.md).)
+
 ---
 
 **Source files for this chapter:**
