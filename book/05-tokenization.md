@@ -241,6 +241,49 @@ meaning (chapter 3's `Embedding`). What happens after that — how
 position 7 gets to consult positions 0–6 before making its guess — is
 the architecture that changed everything.
 
+## Exercises
+
+**Check yourself** (answers unfold):
+
+**Q1.** What is `CharTokenizer("abcabc").vocab_size`?
+
+<details><summary>Answer</summary>
+
+3. The vocabulary is the *set* of characters — `a`, `b`, `c` —
+regardless of how often each occurs.
+
+</details>
+
+**Q2.** Why does BPE append the `</w>` marker to every word before
+learning merges?
+
+<details><summary>Answer</summary>
+
+Two jobs: it stops merges from gluing separate words together, and it
+lets the vocabulary distinguish "low at the end of a word" from "low
+inside *lowest*" — different tokens, different statistics. When
+decoding, `</w>` becomes a space.
+
+</details>
+
+**Q3.** In the x/y windows, what exactly supervises the prediction at
+position `t` — and who produced that label?
+
+<details><summary>Answer</summary>
+
+`y[t]`, the token that *actually followed* `x[..t]` in the corpus. No
+one labeled anything: the raw text is its own answer key. That is
+self-supervision, and it is why every scrap of text is training data.
+
+</details>
+
+**Build it** — implement a `WordTokenizer` with an `<unk>` escape hatch
+(feel the out-of-vocabulary problem yourself) and ★ `most_frequent_pair`
+(one turn of the BPE crank) in
+[`exercises/ch05_tokenization.py`](exercises/ch05_tokenization.py),
+then run `pytest book/exercises/test_ch05_tokenization.py -v`.
+([How the exercises work](exercises/README.md).)
+
 ---
 
 **Source files for this chapter:**

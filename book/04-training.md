@@ -281,6 +281,57 @@ digits with convolutions), and
 [`tests/test_training.py`](../tests/test_training.py) — the end-to-end
 proofs that this loop works, including a tiny GPT.
 
+## Exercises
+
+**Check yourself** (answers unfold):
+
+**Q1.** Spot the bug:
+
+```python
+for step in range(1000):
+    loss = criterion(model(x), y)
+    loss.backward()
+    optimizer.step()
+```
+
+<details><summary>Answer</summary>
+
+No `zero_grad()`. Every `backward()` **adds** to the existing `.grad`,
+so by step 100 the model is stepping along the sum of 100 stale
+gradients. Nothing crashes — the loss just stalls or oscillates, which
+is what makes this the classic silent bug.
+
+</details>
+
+**Q2.** The loss falls nicely for 300 steps, then suddenly reads `nan`.
+Which knob do you suspect first, and what is the standard seatbelt?
+
+<details><summary>Answer</summary>
+
+The learning rate — too large a step overshot into a region of huge
+gradients and the updates exploded. Lower it; and clip the gradient
+norm (you'll build `clip_grad_norm_` in this chapter's exercises) so
+one unlucky batch can't catapult the weights.
+
+</details>
+
+**Q3.** Training loss keeps falling; validation loss has turned upward.
+Name the condition and two remedies.
+
+<details><summary>Answer</summary>
+
+Overfitting — the model is memorizing the training set. Remedies, in
+the order to try: more data, `Dropout` / `weight_decay`, a smaller
+model, or simply stopping at the validation minimum (early stopping).
+
+</details>
+
+**Build it** — implement `clip_grad_norm_` and ★ a full `RMSProp`
+optimizer (the missing link between SGD and Adam) in
+[`exercises/ch04_training.py`](exercises/ch04_training.py), then run
+`pytest book/exercises/test_ch04_training.py -v`.
+([How the exercises work](exercises/README.md).)
+
 ---
 
 **Part I is complete.** You now know the whole machine: tensors carry

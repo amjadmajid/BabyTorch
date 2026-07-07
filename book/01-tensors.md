@@ -299,6 +299,49 @@ recorded step at a time.
 
 That is chapter 2.
 
+## Exercises
+
+**Check yourself** (a minute each — answers unfold):
+
+**Q1.** What is the shape of `babytorch.randn(3, 1) * babytorch.randn(4)`?
+
+<details><summary>Answer</summary>
+
+`(3, 4)`. Aligning shapes from the right, `(3, 1)` meets `(4,)` — the
+missing dimension counts as 1, so both stretch: the column of 3 repeats
+across 4 columns, the row of 4 repeats across 3 rows.
+
+</details>
+
+**Q2.** `(32, 10) + (10,)` broadcasts happily, but `(32, 10) + (32,)`
+raises an error. Why?
+
+<details><summary>Answer</summary>
+
+Alignment is from the **right**: `(32,)` lines up against the size-10
+last dimension, and 32 ≠ 10 with neither being 1. (To add one number
+per *row* you'd reshape to `(32, 1)`.)
+
+</details>
+
+**Q3.** Why is `float32` the default element type instead of the more
+precise `float64`?
+
+<details><summary>Answer</summary>
+
+Half the memory and twice the throughput, and gradient descent is
+noisy anyway — batch noise dwarfs the extra rounding error, so the
+precision would buy nothing. (Frontier models go *lower* still:
+16-bit and below.)
+
+</details>
+
+**Build it** — the deeper track, graded by tests: implement
+`standardize` and ★ `outer` (broadcasting only, no `@`) in
+[`exercises/ch01_tensors.py`](exercises/ch01_tensors.py), then run
+`pytest book/exercises/test_ch01_tensors.py -v`.
+([How the exercises work](exercises/README.md).)
+
 ---
 
 **Source files for this chapter:**

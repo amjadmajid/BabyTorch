@@ -191,6 +191,52 @@ because you have now read a complete one.
 
 Remove the word "baby" and keep going.
 
+## Exercises
+
+**Check yourself** (answers unfold):
+
+**Q1.** A character-level model with a 65-token vocabulary starts
+training at loss ≈ 4.17. Where does that number come from?
+
+<details><summary>Answer</summary>
+
+`−ln(1/65)`. Untrained weights spread probability roughly uniformly, so
+the true next character gets `p ≈ 1/65`, and cross-entropy charges its
+negative log. Any starting loss far from `ln(vocab_size)` is a bug tell.
+
+</details>
+
+**Q2.** One sample reads `"the the the the the"`, another
+`"xq;Rd wke,pf"`. Which came from temperature 0.1 and which from 1.8?
+
+<details><summary>Answer</summary>
+
+The repetition is T = 0.1: sharpening pushes sampling toward argmax,
+and greedy-ish decoding falls into loops. The keysmash is T = 1.8:
+flattening gives junk tokens real probability. Usable text lives in
+between — that is why 0.8 is the default.
+
+</details>
+
+**Q3.** Why does finetuning use a learning rate ~10× smaller than
+pretraining?
+
+<details><summary>Answer</summary>
+
+The weights already encode something valuable; finetuning should
+*nudge* them toward the new corpus, not overwrite them. Too large a
+rate erases the pretrained knowledge — catastrophic forgetting, fast.
+
+</details>
+
+**Build it** — implement `top_p_filter` (nucleus sampling: keep a fixed
+amount of *probability* instead of top-k's fixed *count*) and
+★ `generate_greedy` (then watch greedy text loop — the reason we
+sample), in
+[`exercises/ch08_generation.py`](exercises/ch08_generation.py); run
+`pytest book/exercises/test_ch08_generation.py -v`.
+([How the exercises work](exercises/README.md).)
+
 ---
 
 **Source files for this chapter:**

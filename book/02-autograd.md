@@ -347,6 +347,54 @@ composability is the payoff of the design, and it is the only reason
 chapter 7 can build a GPT without writing a single line of gradient
 code.
 
+## Exercises
+
+**Check yourself** (answers unfold):
+
+**Q1.** In `y = x * x`, the tensor `x` feeds the multiplication twice.
+What does `backward()` do with the two gradient contributions, and
+which line of the traversal code decides it?
+
+<details><summary>Answer</summary>
+
+It **adds** them — `tensor.grad = tensor.grad + tensor_grad` in the
+reverse walk. The chain rule sums over all paths from the loss to a
+tensor. (The same accumulation across *batches* is why training loops
+call `zero_grad()`.)
+
+</details>
+
+**Q2.** Finite differences compute correct gradients with no calculus
+at all. Why don't we train with them instead of backpropagation?
+
+<details><summary>Answer</summary>
+
+Cost: two forward passes **per parameter** per step — for a 2.7M-parameter
+BabyGPT, millions of forwards for a single update. Backprop delivers
+every gradient in roughly one forward plus one backward. Finite
+differences are for *testing* the calculus, not doing it.
+
+</details>
+
+**Q3.** An input reaches `relu` with a negative value. What gradient
+flows back through it, and what failure mode does that create?
+
+<details><summary>Answer</summary>
+
+Exactly zero — the local slope of `max(0, x)` below zero is 0. A neuron
+whose input is *always* negative learns nothing ever again (a "dead
+ReLU"). That is why initialization scales matter, and why the leaky
+variant (`alpha > 0`) exists.
+
+</details>
+
+**Build it** — implement `MinOperation` and ★ `AbsOperation` (forward
+*and* backward) in
+[`exercises/ch02_autograd.py`](exercises/ch02_autograd.py), then run
+`pytest book/exercises/test_ch02_autograd.py -v`. Your calculus faces
+the same finite-difference judge the library's own operations face.
+([How the exercises work](exercises/README.md).)
+
 ---
 
 **Source files for this chapter:**

@@ -297,6 +297,47 @@ layers.1.b (1, 1)
 The model exists and transforms inputs — but its weights are random, so
 its predictions are noise. Making them *not* noise is chapter 4.
 
+## Exercises
+
+**Check yourself** (answers unfold):
+
+**Q1.** How many parameters does `nn.Linear(128, 10)` own?
+
+<details><summary>Answer</summary>
+
+1290: a `(128, 10)` weight matrix plus a `(1, 10)` bias — 1280 + 10.
+
+</details>
+
+**Q2.** What can a stack of five `Linear` layers *without activations*
+compute that a single `Linear` cannot?
+
+<details><summary>Answer</summary>
+
+Nothing. `(x @ W1) @ W2 = x @ (W1 @ W2)` — the stack collapses into one
+matrix. Depth only pays once a non-linearity sits between the layers.
+
+</details>
+
+**Q3.** A classifier gives the correct class probability `p = 0.01`.
+Roughly what does cross-entropy charge for that example, and what is
+the lesson?
+
+<details><summary>Answer</summary>
+
+`−ln(0.01) ≈ 4.6` — versus ≈ 0.1 for a confident correct answer.
+Cross-entropy punishes *confident wrongness* brutally, which is exactly
+the pressure that makes the model calibrate its probabilities.
+
+</details>
+
+**Build it** — implement `RMSNorm` (the LLaMA norm — chapter 7's
+LayerNorm slot, leaner) and ★ `bce_loss` in
+[`exercises/ch03_nn.py`](exercises/ch03_nn.py), then run
+`pytest book/exercises/test_ch03_nn.py -v`. Tensor ops only: if you
+build it right, the backward pass is free.
+([How the exercises work](exercises/README.md).)
+
 ---
 
 **Source files for this chapter:**
