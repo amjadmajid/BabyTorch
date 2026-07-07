@@ -43,11 +43,14 @@ python finetune.py
 python generate.py --checkpoint checkpoints/babygpt_finetuned --prompt "Twinkle"
 ```
 
-Force the CPU (or GPU) for any command with an environment variable:
+Force the CPU (or GPU) for any command with the `--device` flag (or the
+`BABYTORCH_DEVICE` environment variable, which works for any BabyTorch
+program):
 
 ```bash
-BABYTORCH_DEVICE=cpu python train.py --steps 1000 --n_embd 96 --n_layer 4
-BABYTORCH_DEVICE=cuda python train.py
+python train.py --device cpu --steps 1000 --n_embd 96 --n_layer 4
+python train.py --device cuda
+BABYTORCH_DEVICE=cpu python generate.py --prompt "ROMEO:"
 ```
 
 ### Running comfortably on a CPU

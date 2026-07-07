@@ -64,8 +64,12 @@ def main():
     p.add_argument("--batch_size", type=int, default=16)
     p.add_argument("--lr", type=float, default=3e-4)  # smaller than pretraining
     p.add_argument("--seed", type=int, default=1337)
+    p.add_argument("--device", default=None, choices=["auto", "cpu", "cuda", "gpu"],
+                   help="where to run (default: auto -- GPU if available)")
     args = p.parse_args()
 
+    if args.device:
+        babytorch.set_device(args.device)
     babytorch.manual_seed(args.seed)
     print(f"Device: {babytorch.device()}")
 

@@ -48,8 +48,12 @@ def main():
     p.add_argument("--dropout", type=float, default=0.1)
     p.add_argument("--lr", type=float, default=3e-3)
     p.add_argument("--seed", type=int, default=1337)
+    p.add_argument("--device", default=None, choices=["auto", "cpu", "cuda", "gpu"],
+                   help="where to run (default: auto -- GPU if available)")
     args = p.parse_args()
 
+    if args.device:
+        babytorch.set_device(args.device)
     babytorch.manual_seed(args.seed)
     print(f"Device: {babytorch.device()}")
 

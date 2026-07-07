@@ -13,7 +13,7 @@ transfers directly:
     loss.backward()
 """
 
-from .backend import xp, device, to_numpy
+from .backend import xp, device, set_device, to_numpy
 from .engine import Tensor, no_grad
 
 __version__ = "0.3.0"

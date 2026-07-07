@@ -30,8 +30,12 @@ def main():
     p.add_argument("--tokens", type=int, default=400)
     p.add_argument("--temperature", type=float, default=0.8)
     p.add_argument("--top_k", type=int, default=None)
+    p.add_argument("--device", default=None, choices=["auto", "cpu", "cuda", "gpu"],
+                   help="where to run (default: auto -- GPU if available)")
     args = p.parse_args()
 
+    if args.device:
+        babytorch.set_device(args.device)
     print(f"Device: {babytorch.device()}")
     model, tokenizer, config = load_checkpoint(args.checkpoint)
     print(f"Loaded {model.num_parameters():,}-parameter model "

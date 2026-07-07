@@ -162,22 +162,31 @@ from babytorch.backend import xp    # numpy on CPU, cupy on GPU
 xp.zeros((2, 3))                    # works identically on both
 ```
 
-At import time, `backend.py` picks the library once: **CuPy** if an
-NVIDIA GPU is available, otherwise **NumPy**. CuPy is a deliberate
-drop-in clone of NumPy's API, so this single choice is the entire GPU
-story — there is no other GPU-specific code in the framework. You can
-force the choice with an environment variable:
+`backend.py` picks the library — **CuPy** if an NVIDIA GPU is
+available, otherwise **NumPy** — and `xp` is a tiny proxy that forwards
+every call to the current choice. CuPy is a deliberate drop-in clone of
+NumPy's API, so this single choice is the entire GPU story — there is no
+other GPU-specific code in the framework. Control it from code, or from
+the environment:
+
+```python
+>>> import babytorch
+>>> babytorch.set_device("cpu")    # "cpu", "cuda", or "auto"
+'cpu'
+>>> babytorch.device()
+'cpu'
+>>> t.numpy()    # copy back to a NumPy array on the CPU (for plotting, saving...)
+```
 
 ```bash
-BABYTORCH_DEVICE=cpu  python train.py    # always NumPy
+BABYTORCH_DEVICE=cpu  python train.py    # initial device via the environment
 BABYTORCH_DEVICE=cuda python train.py    # require the GPU
 ```
 
-```python
->>> babytorch.device()
-'cpu'            # or 'cuda' if CuPy found a GPU
->>> t.numpy()    # copy back to a NumPy array on the CPU (for plotting, saving...)
-```
+One rule: pick the device *before* building tensors or models — arrays
+do not migrate to the new library after they are created. (On macOS
+there is no CUDA, so everything runs on the CPU — which works out of
+the box.)
 
 ## A tensor that remembers where it came from
 

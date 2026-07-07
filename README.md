@@ -34,16 +34,23 @@ pip install -e ".[gpu]"             # GPU acceleration via CuPy (CUDA 12.x)
 pip install -e ".[dev]"             # everything plus pytest
 ```
 
-### GPU support
+### Choosing a device (CPU / GPU)
 
-With the `[gpu]` extra installed (and an NVIDIA driver), BabyTorch picks the GPU automatically. Force a device with an environment variable:
+BabyTorch runs on the CPU out of the box on any platform — Linux, macOS, Windows. With the `[gpu]` extra installed (NVIDIA GPU, CUDA 12.x), it picks the GPU automatically. Three ways to control the choice:
 
-```bash
-BABYTORCH_DEVICE=cpu  python train.py    # always NumPy
-BABYTORCH_DEVICE=cuda python train.py    # require the GPU
+```python
+import babytorch
+babytorch.set_device("cpu")      # in code: "cpu", "cuda", or "auto"
 ```
 
-There is no other GPU-specific code to learn: every module does its math through a single `xp` alias that resolves to NumPy or CuPy at import time (see [`babytorch/backend.py`](babytorch/backend.py)).
+```bash
+BABYTORCH_DEVICE=cpu python train.py     # environment variable (initial device)
+python train.py --device cpu            # CLI flag on the BabyGPT scripts
+```
+
+Pick the device **before** building tensors or models — arrays don't migrate between libraries after creation. There is no other GPU-specific code to learn: every module does its math through a single `xp` alias that resolves to NumPy or CuPy (see [`babytorch/backend.py`](babytorch/backend.py)).
+
+**macOS note:** Macs have no CUDA, so BabyTorch runs on the CPU there (everything works, just slower for the bigger models). An Apple-Silicon GPU backend via MLX is on the roadmap — see `TODO.md`.
 
 ## The Book
 
