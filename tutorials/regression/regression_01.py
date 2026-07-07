@@ -1,131 +1,79 @@
+"""Regression: fit a curve to noisy points -- the "hello world" of training.
 
-BABYTORCH = False
+A small MLP learns y = f(x) from 100 noisy examples.  The four-step loop
+(forward -> loss -> backward -> step) is the same one that trains every
+model in this repository, up to and including BabyGPT.
 
-import random
-import cupy as cp
-from sklearn.datasets import make_regression
-import matplotlib.pyplot as plt
+Run it::
 
-cp.random.seed(0)
-random.seed(0)
+    python regression_01.py
+
+Requires the ``[viz]`` extra for the plots (``pip install -e ".[viz]"``).
+"""
+
+import numpy as np
+
+import babytorch
+import babytorch.nn as nn
+from babytorch.nn import MSELoss
+from babytorch.optim import SGD
+from babytorch import Tensor, Grapher
+
+babytorch.manual_seed(0)
+np.random.seed(0)
 
 num_iterations = 2000
-lr =0.1
+learning_rate = 0.1
 
-# Create a regression dataset
-x, y = make_regression(n_samples=100, n_features=1, noise=20, random_state=0)
+# --- data: noisy samples of a hidden curve -------------------------------
+# The model never sees the formula, only the (x, y) points.
+x_np = np.linspace(-2.0, 2.0, 100, dtype=np.float32).reshape(-1, 1)
+y_np = 0.5 * np.sin(2.0 * x_np) + 0.5 \
+    + np.random.normal(0.0, 0.05, x_np.shape).astype(np.float32)
 
-y = (y.reshape(-1, 1) + 1) * .5  # make y be between 0 and 1
-y /= cp.max(y)
-print(f"{y[:5]=}")
+x = Tensor(x_np)
+y = Tensor(y_np)
 
-if BABYTORCH: 
+# --- model: 1 input -> 1 output, with room to bend ------------------------
+# Tanh suits smooth curves: it is itself smooth, while ReLU would
+# approximate the sine with straight-line segments.
+model = nn.Sequential(
+    nn.Linear(1, 8, nn.Tanh()),
+    nn.Linear(8, 16, nn.Tanh()),
+    nn.Linear(16, 8, nn.Tanh()),
+    nn.Linear(8, 1),
+)
 
-    import babytorch 
-    import babytorch.nn as nn
-    from babytorch.optim import SGD, LambdaLR
-    from babytorch.visualization import Grapher
+optimizer = SGD(model.parameters(), learning_rate=learning_rate)
+criterion = MSELoss()
 
-    x = babytorch.Tensor(x, require_grad=True)
-    y = babytorch.Tensor(y, require_grad=True)
+# --- training loop ---------------------------------------------------------
+losses = []
+for step in range(num_iterations):
+    predictions = model(x)               # 1. forward
+    loss = criterion(predictions, y)     # 2. how wrong?
+    optimizer.zero_grad()                #    (forget old gradients)
+    loss.backward()                      # 3. gradients for every parameter
+    optimizer.step()                     # 4. small step downhill
+    losses.append(loss.item())
+    if step % 200 == 0:
+        print(f"step {step:4d} | loss {loss.item():.5f}")
 
-    model = nn.Sequential(
-        nn.Linear(1, 8, nn.ReLU()),
-        nn.Linear(8, 16, nn.ReLU()),
-        nn.Linear(16, 8, nn.ReLU()),
-        nn.Linear(8, 1)
-    )
+print(f"final loss: {losses[-1]:.5f}")
 
-    optimizer = SGD(model.parameters(), learning_rate=lr)
-    # optimizer = SGD(model.parameters(), weight_decay=0.001, learning_rate=lr)
-    # scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: 1.0 - 0.9 * epoch / num_iterations)
-    # scheduler = LambdaLR(optimizer, lr_lambda=lambda epoch: lr - lr * 0.9 * (epoch+1) / (num_iterations+1))
-    criterion = nn.MSELoss() 
+# --- evaluate and plot ------------------------------------------------------
+with babytorch.no_grad():
+    predictions = model(x)
 
-    # Training (model optimization)
-    losses = []
-    for k in range(num_iterations):
-        y_predictions = model(x)
-        loss = criterion(y_predictions, y)
-        loss.backward()
-        optimizer.step()
-        # scheduler.step(k)
-        model.zero_grad()
-        losses.append(loss.data)
-        # print(f"{k} - {loss.data}")
+grapher = Grapher()
+grapher.plot_loss(losses)
+grapher.show()
 
-    # print(f"{losses=}")
-    Grapher().plot_loss(losses)
-    Grapher().show()
+import matplotlib.pyplot as plt
 
-    # Testing
-    with babytorch.no_grad():
-        y_predictions = model(x)
-
-    # Convert to numpy arrays for easier manipulation
-    x = cp.array(x).flatten()
-    y_predictions = cp.array(y_predictions).flatten()
-
-
-else:
-
-    # PyTorch version
-    import random
-    import torch
-    import torch.nn as nn
-    import torch.optim as optim
-
-    torch.manual_seed(0)
-
-    # Convert to PyTorch Tensors
-    x_tensor = torch.tensor(x, dtype=torch.float32)
-    y_tensor = torch.tensor(y, dtype=torch.float32)
-
-    model = nn.Sequential(
-        nn.Linear(1, 8),
-        nn.ReLU(),
-        nn.Linear(8, 16),
-        nn.ReLU(),
-        nn.Linear(16, 8),
-        nn.ReLU(),
-        nn.Linear(8, 1)
-    )
-
-    optimizer = optim.SGD(model.parameters(), lr=lr)
-    criterion = nn.MSELoss()
-
-    # Training (model optimization)
-    losses = []
-    for k in range(num_iterations):
-        y_predictions = model(x_tensor)
-        loss = criterion(y_predictions, y_tensor)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        losses.append(loss.item())
-        # print(f"{k} - {loss.item()}")
-
-    print(losses[-1])
-    plt.plot(losses)
-    plt.title('Loss Plot')
-    plt.show()
-
-    # Testing
-    with torch.no_grad():
-        y_predictions = model(x_tensor)
-
-    # Convert to numpy arrays for easier manipulation
-    x = x.flatten()
-    y_predictions = y_predictions.numpy().flatten()
-
-
-# Get the sorted order of x and sort x and y_predictions accordingly
-sorted_order = cp.argsort(x)
-x_sorted = x[sorted_order]
-y_predictions_sorted = y_predictions[sorted_order]
-
-# Plot the results
-plt.scatter(x, y, color='red')
-plt.scatter(x, y_predictions, color='green')
-plt.plot(x_sorted, y_predictions_sorted, color='blue', linewidth=3)  # Plot sorted values
+plt.figure()
+plt.scatter(x_np, y_np, color='red', s=12, label='noisy data')
+plt.plot(x_np, predictions.numpy(), color='blue', linewidth=3, label='model')
+plt.legend()
+plt.title('BabyTorch regression')
 plt.show()

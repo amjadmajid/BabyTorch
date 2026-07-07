@@ -1,110 +1,102 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
+"""Multi-class classification with CrossEntropyLoss on a tiny dataset.
 
-# Dummy data (5 samples, 4 features)
-X = torch.FloatTensor([
-    [0.1, 0.2, 0.3, 0.4],
-    [0.5, 0.3, 0.2, 0.7],
-    [0.6, 0.1, 0.1, 0.1],
-    [0.9, 0.8, 0.2, 0.1],
-    [0.5, 0.1, 0.1, 0.2]
-])
+Five examples, four features each, three possible classes.  The model
+outputs one raw score ("logit") per class and CrossEntropyLoss turns the
+scores into probabilities and charges -log(p) of the correct class.
 
-# Dummy targets (5 samples, 1 label per sample)
-y = torch.LongTensor([0, 1, 2, 1, 0])
+The BabyTorch model always runs; if PyTorch is installed, the identical
+model is trained there too for comparison.
 
-# Initialize the model using nn.Sequential
-input_dim = 4  # Number of input features
-output_dim = 3  # Number of labels (classes)
+Run it::
 
-model = nn.Sequential(
-    nn.Linear(input_dim, output_dim)
-)
+    python multi_class_classification_CrossEntropyLoss.py
+"""
 
-criterion = nn.CrossEntropyLoss()  # Cross-Entropy Loss for multi-class problems
-optimizer = optim.SGD(model.parameters(), lr=0.01)
-
-# Training Loop
-num_epochs = 1000
-for epoch in range(num_epochs):
-    # Forward pass
-    outputs = model(X)
-
-    loss = criterion(outputs, y)
-
-    # Zero gradients, backward pass, optimizer step
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-    # Print loss
-    if (epoch+1) % 10 == 0:
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
-
-# Test the model
-with torch.no_grad():
-    test_x = torch.FloatTensor([[0.4, 0.2, 0.4, 0.5]])
-    output = model(test_x)
-    print("output: ", output)
-    _, predicted = torch.max(output.data, 1)
-    print(f'Predicted label: {predicted.item()}')
-
-
-print("#"*100)
-
-
+import numpy as np
 
 import babytorch
 from babytorch import Tensor
 import babytorch.nn as nn
 from babytorch.optim import SGD
-import cupy as cp
 
 # Dummy data (5 samples, 4 features)
-X = Tensor([
+X_data = np.array([
     [0.1, 0.2, 0.3, 0.4],
     [0.5, 0.3, 0.2, 0.7],
     [0.6, 0.1, 0.1, 0.1],
     [0.9, 0.8, 0.2, 0.1],
-    [0.5, 0.1, 0.1, 0.2]
-])
+    [0.5, 0.1, 0.1, 0.2],
+], dtype=np.float32)
 
-# Dummy targets (5 samples, 1 label per sample)
-y = Tensor([0, 1, 2, 1, 0], dtype=cp.int32) # int is necessary for the CrossEntropyLoss
+# Dummy targets: one class id (0, 1 or 2) per sample
+y_data = np.array([0, 1, 2, 1, 0], dtype=np.int64)
 
-# Initialize the model using nn.Sequential
-input_dim = 4  # Number of input features
-output_dim = 3  # Number of labels (classes)
+test_data = np.array([[0.4, 0.2, 0.4, 0.5]], dtype=np.float32)
 
-model = nn.Sequential(
-    nn.Linear(input_dim, output_dim)
-)
+input_dim = 4    # number of input features
+output_dim = 3   # number of classes
 
-criterion = nn.CrossEntropyLoss()  # Cross-Entropy Loss for multi-class problems
-optimizer = SGD(model.parameters(), learning_rate=0.01)
 
-# Training Loop
-num_epochs = 1000
-for epoch in range(num_epochs):
-    # Forward pass
-    outputs = model(X)
-    loss = criterion(outputs, y)
-    # print(f"{loss=}")
+def babytorch_run(num_epochs=1000, lr=0.01):
+    print("--- BabyTorch ---")
+    X = Tensor(X_data)
 
-    # Zero gradients, backward pass, optimizer step
-    model.zero_grad()  #TODO this has to be optimizer.zero_grad() to mach the pytorch implementation
-    loss.backward()
-    optimizer.step()
+    model = nn.Sequential(nn.Linear(input_dim, output_dim))
+    criterion = nn.CrossEntropyLoss()   # targets are integer class ids
+    optimizer = SGD(model.parameters(), learning_rate=lr)
 
-    # Print loss
-    if (epoch+1) % 10 == 0:
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.data:.4f}')
+    for epoch in range(num_epochs):
+        outputs = model(X)
+        loss = criterion(outputs, y_data)
 
-# Test the model
-with babytorch.no_grad():
-    test_x = Tensor([[0.4, 0.2, 0.4, 0.5]])
-    output = model(test_x)
-    # print(f'{output=}')
-    # predicted = output.max(axis=1)
-    print(f'Predicted label: {output.data.argmax()}')
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if (epoch + 1) % 100 == 0:
+            print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
+
+    # Test the model: the predicted class is the one with the largest score.
+    with babytorch.no_grad():
+        output = model(Tensor(test_data))
+    print(f'Predicted label: {int(output.argmax())}')
+
+
+def pytorch_run(num_epochs=1000, lr=0.01):
+    print("--- PyTorch ---")
+    import torch
+    import torch.nn as t_nn
+    import torch.optim as t_optim
+
+    X = torch.tensor(X_data)
+    y = torch.tensor(y_data)
+
+    model = t_nn.Sequential(t_nn.Linear(input_dim, output_dim))
+    criterion = t_nn.CrossEntropyLoss()
+    optimizer = t_optim.SGD(model.parameters(), lr=lr)
+
+    for epoch in range(num_epochs):
+        outputs = model(X)
+        loss = criterion(outputs, y)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if (epoch + 1) % 100 == 0:
+            print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
+
+    with torch.no_grad():
+        output = model(torch.tensor(test_data))
+    print(f'Predicted label: {output.argmax().item()}')
+
+
+if __name__ == '__main__':
+    babytorch_run()
+    try:
+        import torch  # noqa: F401
+    except ImportError:
+        print("\nPyTorch is not installed -- skipping the comparison run.")
+    else:
+        print()
+        pytorch_run()

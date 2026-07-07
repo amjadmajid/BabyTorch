@@ -1,140 +1,131 @@
 <div align="center"> <img alt="BabyTorch Logo" src="/images/babyTorchLogo.jpg">
 
-<h3> Look at under the hood, modify core algorithims, and when ready remove the word `baby` to work with PyTorch - <span style="font-style:italic; font-size:20px; font-weight:normal">BabyTorch's vision</span> </h3>
+<h3> Look under the hood, modify core algorithms, and when ready remove the word `baby` to work with PyTorch - <span style="font-style:italic; font-size:20px; font-weight:normal">BabyTorch's vision</span> </h3>
 </div>
 
-
 ## Introduction
-BabyTorch is a lightweight, educational deep learning framework inspired by PyTorch. It's designed to offer a similar API to PyTorch, but with a minimal implementation. This simplicity makes it an excellent tool for learning and experimenting with deep learning concepts. The framework is structured to be easily understandable and modifiable, making it perfect for educational purposes.
+
+BabyTorch is a lightweight, educational deep learning framework that mirrors the PyTorch API with a minimal, readable implementation — small enough to read in an afternoon, capable enough to train a small GPT. It runs on CPU (NumPy) out of the box and on NVIDIA GPUs (CuPy) with zero code changes. Everything you learn here transfers directly to PyTorch.
+
+```python
+import babytorch
+import babytorch.nn as nn
+from babytorch.optim import SGD
+
+x = babytorch.randn(32, 10, requires_grad=True)
+model = nn.Sequential(nn.Linear(10, 32, nn.ReLU()), nn.Linear(32, 1))
+loss = ((model(x) - 1) ** 2).mean()
+loss.backward()                      # gradients for every parameter, automatically
+```
 
 ## Installation
-To install BabyTorch, follow these steps:
 
-1. Clone the BabyTorch repository:
-   ```bash
-   git clone https://github.com/amjadmajid/BabyTorch.git
-   ```
-2. Navigate to the BabyTorch directory:
-   ```bash
-   cd BabyTorch
-   ```
-3. For a regular installation, run:
-   ```bash
-   python setup.py install
-   ```
-4. For developing BabyTorch itself, run:
-   ```bash
-   pip install -e . --user 
-   ```
+```bash
+git clone https://github.com/amjadmajid/BabyTorch.git
+cd BabyTorch
+pip install -e .                     # CPU only -- NumPy is the sole dependency
+```
 
-### GPU Support
-1. Install CUDA Toolkit. For that you need to specify your system specifications and follow the instructions on [NVIDIA website](https://developer.nvidia.com/cuda-downloads)
-2. Install CuPy from GitHub following these instructions
-   ```
-   git clone --recursive https://github.com/cupy/cupy.git
-   cd cupy
-   pip install .
-   ```
+Optional extras:
+
+```bash
+pip install -e ".[viz]"             # loss curves + computation-graph drawing
+pip install -e ".[gpu]"             # GPU acceleration via CuPy (CUDA 12.x)
+pip install -e ".[dev]"             # everything plus pytest
+```
+
+### GPU support
+
+With the `[gpu]` extra installed (and an NVIDIA driver), BabyTorch picks the GPU automatically. Force a device with an environment variable:
+
+```bash
+BABYTORCH_DEVICE=cpu  python train.py    # always NumPy
+BABYTORCH_DEVICE=cuda python train.py    # require the GPU
+```
+
+There is no other GPU-specific code to learn: every module does its math through a single `xp` alias that resolves to NumPy or CuPy at import time (see [`babytorch/backend.py`](babytorch/backend.py)).
+
+## The Book
+
+The repository ships with a short book that explains the whole codebase in order — how a framework works, then how a GPT is built with it:
+
+* **[Part I — The engine](book/README.md):** tensors, autograd, neural networks, training.
+* **[Part II — BabyGPT](book/README.md):** tokenization, attention, the Transformer, pretraining/finetuning/generation.
+
+Each chapter links to the exact source files it explains. Start at [`book/README.md`](book/README.md).
+
+## Tutorials
+
+Runnable, commented examples, from a two-line regression to a working language model:
+
+1. **[BabyGPT — a tiny LLM](tutorials/llm/README.md)**: pretrain a decoder-only Transformer on Shakespeare, finetune it on nursery rhymes, and generate text. The flagship tutorial.
+2. **[Regression](tutorials/regression/README.md)**: fit a noisy line/curve with a small MLP.
+3. **Classification**: [binary](tutorials/classification/binary_classification/README.md), [multi-class](tutorials/classification/multi-class_classification/simple_multi-class_classification/README.md), and [MNIST digits with linear or convolutional models](tutorials/classification/multi-class_classification/mnist_digits_classification/README.md).
 
 ## Features
-BabyTorch includes the following modules, mirroring the structure of PyTorch:
 
-- `datasets`: Data loading utilities and predefined datasets like MNIST.
-- `engine`: Core engine for operations and tensor manipulations.
-- `nn`: Neural network layers and loss functions.
-- `optim`: Optimization algorithms and learning rate schedulers.
-- `visualization`: Tools for visualizing data and model graphs.
+BabyTorch mirrors PyTorch's package structure:
 
-## Example Usage
-Below are some examples of how to use BabyTorch, which also serve as basic tests:
+- `babytorch.engine` — the autograd engine: `Tensor` plus every operation's forward *and* backward pass.
+- `babytorch.nn` — layers (`Linear`, `Embedding`, `LayerNorm`, `Dropout`, `Conv2D`, ...), activations (`ReLU`, `GELU`, ...), losses (`MSELoss`, `CrossEntropyLoss`), and `nn.functional`.
+- `babytorch.optim` — `SGD` (momentum, weight decay), `Adam`, `AdamW`, and LR schedulers including `CosineWarmupLR`.
+- `babytorch.text` — `CharTokenizer` and a readable `BPETokenizer` (the GPT-family algorithm).
+- `babytorch.datasets` — `DataLoader`, MNIST, and the Tiny Shakespeare corpus.
+- `babytorch.visualization` — loss curves and rendering of the actual computation graph.
+- `babytorch.backend` — the NumPy/CuPy device selection.
 
-1. **Classification Examples**:
-   - [Basic binary classification](tutorials/classification/binary_classification/README.md)
-   - [Simple Multi-class classification demo](tutorials/classification/multi-class_classification/simple_multi-class_classification/README.md)
-   - [MNIST classification using linear and convolution layers](tutorials/classification/multi-class_classification/mnist_digits_classification/README.md)
-  
-2. **Regression Examples**:
-   - [Simple Linear Regression](tutorials/regression/README.md)
- 
-3. **Tensor Tests**:
-   - [Tensor operations](tests/tensor_operations/README.md)
-   
-4. **Visualization Tests**:
-   - Graph visualization: `tests/visualization_tests/grapher_test.py`
+## Tests
 
-These tests provide practical examples of implementing and using various components of BabyTorch.
+The test suite is the ground truth that the framework works — and a good source of usage examples ([`tests/README.md`](tests/README.md)):
 
-## Contributing
-We welcome contributions to __BabyTorch. It is in an early development stage__. If you're interested in improving BabyTorch or adding new features, please check `TODO.md` for upcoming tasks or propose your own ideas.
+```bash
+pip install -e ".[dev]"
+pytest                        # full suite on CPU
+BABYTORCH_DEVICE=cuda pytest  # the same suite on the GPU
+```
 
-## BabyTorch Architecture Design
+Highlights: every differentiable op is checked against finite-difference gradients (`tests/test_autograd.py`), training tests prove an MLP solves XOR and a tiny GPT overfits a sequence (`tests/test_training.py`), and `tests/test_pytorch_parity.py` compares numbers against PyTorch when it is installed.
 
-The BabyTorch framework is designed with simplicity and educational value in mind. Here’s an overview of its main components:
+## Architecture design
 
-### Core Modules
+The framework is built around one separation of concerns, kept everywhere:
 
-1. **Datasets (`datasets`)**
-   - Handles data loading and preprocessing.
-   - Includes implementations for standard datasets like MNIST.
-   - Provides a foundation for custom dataset integration.
+1. **Engine** (`engine/`) — `operations.py` implements each operation's forward and backward math on raw arrays; `tensor.py` implements the `Tensor` data structure, records the computation graph, and replays it in reverse in `backward()`. *Math in operations, bookkeeping in tensors.*
+2. **Neural networks** (`nn/`) — a ~100-line `Module` base class discovers parameters by walking attributes; layers are small compositions of tensor operations, so no layer needs custom gradient code.
+3. **Optimizers** (`optim/`) — `step()`/`zero_grad()` over a parameter list; schedulers adjust the learning rate over time.
+4. **Data** (`datasets/`, `text/`) — batching, standard datasets, and tokenizers that turn text into token ids.
+5. **Visualization** (`visualization/`) — plot losses, or draw the recorded computation graph of any tensor.
 
-2. **Engine (`engine`)**
-   - The backbone of the framework, handling core operations.
-   - It contains two files: `operations.py` and `tensor.py`.
-   - `operations.py` implements the underlying computation engine. For each operation the forward and backward passes are implemented.
-   - `tensor.py` implements the tensor data structure and its operations. For any operation, the corresponding operation in `operations.py` is called but the result is stored in a tensor. In this way we separate the computation and the data.
+### Directory structure
 
-3. **Neural Networks (`nn`)**
-   - Provides building blocks for neural networks.
-   - Includes layers, activation functions, and loss functions.
-   - Allows easy stacking and customization of layers to build various models.
-
-4. **Optimizers (`optim`)**
-   - Implements optimization algorithms.
-   - Contains optimizers like SGD.
-   - Features learning rate schedulers for controlling the learning rate during training.
-
-5. **Visualization (`visualization`)**
-   - Tools for visualizing data, model architectures, and training progress.
-   - Helps in understanding model behavior and performance.
-
-### Testing and Examples
-
-- The `tests` directory contains numerous tests and examples demonstrating the use of BabyTorch's components. It serves as both a testing suite and a source of practical examples for users.
-
-### Extensibility
-
-- Designed to be easily extensible, allowing users to add new functionalities or modify existing ones.
-- Encourages experimentation and exploration in deep learning.
-
-### Directory Structure
 ```bash
 .
 ├── README.md
 ├── TODO.md
 ├── babytorch
-│   ├── __init__.py
-│   ├── __pycache__
-│   ├── datasets
+│   ├── backend.py            # NumPy or CuPy ("xp"), chosen once
 │   ├── engine
-│   ├── nn
-│   ├── optim
-│   └── visualization
-├── images
-│   └── babyTorchLogo.jpg
-├── setup.py
-├── tests
-│   ├── tensor_operations
-│   └── visualization
+│   │   ├── operations.py     # forward + backward of every op
+│   │   └── tensor.py         # Tensor, computation graph, backward()
+│   ├── nn                    # Module, layers, losses, functional
+│   ├── optim                 # SGD, Adam, AdamW, LR schedulers
+│   ├── text                  # CharTokenizer, BPETokenizer
+│   ├── datasets              # DataLoader, MNIST, Tiny Shakespeare
+│   └── visualization         # loss curves, graph drawing
+├── book                      # the BabyTorch book (Parts I and II)
+├── tests                     # pytest suite (CPU and GPU)
 └── tutorials
-    ├── classification
-    └── regression
+    ├── classification        # binary, multi-class, MNIST
+    ├── regression            # linear/MLP regression
+    └── llm                   # BabyGPT: pretrain -> finetune -> generate
 ```
----
 
-This addition to the README provides a clear, high-level view of BabyTorch's architecture, making it easier for users to navigate the framework and understand its capabilities. You can tailor the descriptions to match the specific implementations and features of BabyTorch.
+## Contributing
+
+We welcome contributions — BabyTorch favors readable implementations over fast ones, so the bar for a change is "does this make the idea clearer?". Check `TODO.md` for open tasks or propose your own.
 
 ## License
+
 This project is licensed under the [MIT License](LICENSE).
 
 ---

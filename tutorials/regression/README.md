@@ -1,110 +1,94 @@
-# Simple Regression Example with BabyTorch and PyTorch for Comparison
+# Regression with BabyTorch
 
 ## Introduction
-In this tutorial, we'll demonstrate how to implement a regression model using both BabyTorch and PyTorch. We'll predict values from a synthetic dataset created with `make_regression`.
 
-## Setup and Data Preparation
-```python
-import numpy as np
-from sklearn.datasets import make_regression
-import matplotlib.pyplot as plt
+Regression means predicting a *number* (rather than a class): here, a
+small MLP learns a hidden curve `y = f(x)` from 100 noisy samples. This
+is the smallest complete BabyTorch program — the same four-step training
+loop later trains MNIST classifiers and BabyGPT.
 
-# Create regression data
-x, y = make_regression(n_samples=100, n_features=1, noise=20, random_state=0)
-y = (y.reshape(-1, 1) + 1) * .5
-y /= np.max(y)
-```
+For the concepts behind every line (autograd, MSE, SGD), see
+[Part I of the book](../../book/README.md).
 
-## BabyTorch Implementation
+## Walkthrough
 
-1. **Import Libraries**
-   - Import necessary modules from BabyTorch.
+1. **Data** — noisy samples of a curve the model never sees in formula
+   form:
+
    ```python
-   import babytorch
-   import babytorch.nn as nn
-   from babytorch.optim import SGD
+   x_np = np.linspace(-2.0, 2.0, 100, dtype=np.float32).reshape(-1, 1)
+   y_np = 0.5 * np.sin(2.0 * x_np) + 0.5 + np.random.normal(0.0, 0.05, x_np.shape)
+
+   x = Tensor(x_np)
+   y = Tensor(y_np)
    ```
 
-2. **Model Definition**
-   - Define a neural network with multiple linear and ReLU layers.
+2. **Model** — one input, one output, three hidden layers so the
+   network can bend. Tanh suits smooth targets: it is itself smooth,
+   where ReLU would approximate the sine with straight-line segments.
+
    ```python
    model = nn.Sequential(
-       nn.Linear(1, 8, nn.ReLU()),
-       nn.Linear(8, 16, nn.ReLU()),
-       nn.Linear(16, 8, nn.ReLU()),
-       nn.Linear(8, 1)
+       nn.Linear(1, 8, nn.Tanh()),
+       nn.Linear(8, 16, nn.Tanh()),
+       nn.Linear(16, 8, nn.Tanh()),
+       nn.Linear(8, 1),
    )
    ```
 
-3. **Training**
-   - Set up the optimizer and loss function, then train the model.
+3. **Training** — the four-step loop:
+
    ```python
    optimizer = SGD(model.parameters(), learning_rate=0.1)
-   criterion = nn.MSELoss()
+   criterion = MSELoss()
 
-   for k in range(2000):
-       y_pred = model(x)
-       loss = criterion(y_pred, y)
-       loss.backward()
-       optimizer.step()
-       model.zero_grad()
+   for step in range(2000):
+       predictions = model(x)               # 1. forward
+       loss = criterion(predictions, y)     # 2. how wrong?
+       optimizer.zero_grad()                #    forget old gradients
+       loss.backward()                      # 3. gradients
+       optimizer.step()                     # 4. small step downhill
    ```
 
-4. **Visualization**
-   - Visualize the training losses and model predictions.
+4. **Visualization** — the loss curve, then the fitted curve on top of
+   the data:
+
    ```python
-   # Assuming Grapher() is set up for plotting
    Grapher().plot_loss(losses)
-   ```
 
-## PyTorch Implementation
-
-1. **Import Libraries**
-   - Use similar libraries from PyTorch.
-   ```python
-   import torch
-   import torch.nn as nn
-   import torch.optim as optim
-   ```
-
-2. **Model Definition**
-   - Define an equivalent model in PyTorch.
-   ```python
-   model = nn.Sequential(
-       nn.Linear(1, 8),
-       nn.ReLU(),
-       nn.Linear(8, 16),
-       nn.ReLU(),
-       nn.Linear(16, 8),
-       nn.ReLU(),
-       nn.Linear(8, 1)
-   )
-   ```
-
-3. **Training**
-   - Configure and execute the training loop in PyTorch.
-   ```python
-   optimizer = optim.SGD(model.parameters(), lr=0.1)
-   criterion = nn.MSELoss()
-
-   for k in range(2000):
-       optimizer.zero_grad()
-       y_pred = model(torch.tensor(x, dtype=torch.float32))
-       loss = criterion(y_pred, torch.tensor(y, dtype=torch.float32))
-       loss.backward()
-       optimizer.step()
-   ```
-
-4. **Plot Results**
-   - Plot the final predictions against the actual data.
-   ```python
-   plt.scatter(x, y, color='red')  # Actual data
-   plt.plot(x_sorted, y_predictions_sorted, color='blue')  # Model predictions
+   plt.scatter(x_np, y_np, color='red')                    # the data
+   plt.plot(x_np, predictions.numpy(), color='blue')       # the model
    plt.show()
    ```
 
-## Conclusion
-This tutorial provides a side-by-side implementation of regression models in BabyTorch and PyTorch, highlighting their similarities and key syntax differences. Both frameworks are powerful tools for building neural networks, with BabyTorch serving as a simplified entry point for learning and transitioning to PyTorch.
+## The PyTorch equivalent
 
-## Full Code 
-The full code is available [here](regression.py).
+BabyTorch deliberately mirrors PyTorch, so the port is nearly mechanical
+— activations become separate layers, `learning_rate` becomes `lr`:
+
+```python
+import torch.nn as nn
+import torch.optim as optim
+
+model = nn.Sequential(
+    nn.Linear(1, 8), nn.Tanh(),
+    nn.Linear(8, 16), nn.Tanh(),
+    nn.Linear(16, 8), nn.Tanh(),
+    nn.Linear(8, 1),
+)
+optimizer = optim.SGD(model.parameters(), lr=0.1)
+criterion = nn.MSELoss()
+# ...the training loop is identical...
+```
+
+## Full code
+
+The full code is available in
+[`regression_01.py`](regression_01.py). Run it with:
+
+```bash
+python regression_01.py
+```
+
+It prints the falling loss and opens two plots (requires the `[viz]`
+extra: `pip install -e ".[viz]"`).

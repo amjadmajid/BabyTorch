@@ -5,3 +5,10 @@ __pycache__/
 .ipynb_checkpoints
 .DS_Store
 .vscode/
+
+# Artifacts produced by running the tutorials
+mnist_data/
+*.model
+checkpoints/
+tutorials/llm/data/
+graphs/
