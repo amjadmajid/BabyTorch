@@ -3,6 +3,9 @@
 *How deep learning frameworks work — and how a GPT is built — explained
 through a codebase small enough to actually read.*
 
+> **Also available:** an [Arabic edition](ar/README.md) — النسخة العربية —
+> and a [PDF build](BUILD.md) of both languages (`./build.sh en` / `ar`).
+
 BabyTorch is a working deep learning framework in roughly two thousand
 lines of commented Python. It mirrors the PyTorch API, runs on CPU
 (NumPy) or GPU (CuPy), and is capable enough to train a small GPT that

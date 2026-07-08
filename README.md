@@ -62,7 +62,7 @@ The repository ships with a short book that explains the whole codebase in order
 * **[Part III — Reinforcement learning](book/README.md):** the agent–environment loop, policy gradients (REINFORCE, Actor-Critic, PPO), and Deep Q-Learning.
 * **[Part IV — Diffusion](book/README.md):** generation by denoising — the forward/reverse processes and the predict-the-noise loss, a 2-D toy, and a convolutional U-Net that denoises MNIST.
 
-Each chapter links to the exact source files it explains. Start at [`book/README.md`](book/README.md).
+Each chapter links to the exact source files it explains. Start at [`book/README.md`](book/README.md). The book is also available as an [Arabic edition](book/ar/README.md) (النسخة العربية) and builds to **PDF** in both languages — see [`book/BUILD.md`](book/BUILD.md).
 
 ## Tutorials
 
