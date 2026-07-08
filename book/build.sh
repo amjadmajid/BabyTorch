@@ -20,14 +20,21 @@ case "$lang" in
     srcdir="$here"
     meta="$here/pandoc/metadata-en.yaml"
     out="$build/book-en.pdf"
+    engine="xelatex"
     extra=""
     ;;
   ar)
     srcdir="$here/ar"
     meta="$here/pandoc/metadata-ar.yaml"
     out="$build/book-ar.pdf"
-    # Keep left-to-right code correct inside right-to-left Arabic text.
-    extra="--lua-filter $here/pandoc/ltr-code.lua"
+    # xelatex (TeX Live) finds the Arabic font in ~/Library/Fonts and drives
+    # polyglossia RTL fine; we avoid pandoc's babel path via preamble-ar.tex.
+    engine="xelatex"
+    # RTL preamble (polyglossia). NOTE: the ltr-code.lua filter (to keep code
+    # left-to-right) is temporarily disabled — its \LR wrapping clashes with
+    # polyglossia+unicode-math and aborts the build. Consequence: code blocks
+    # currently render RTL-reversed in book-ar.pdf. See ltr-code.lua. TODO.
+    extra="--include-in-header $here/pandoc/preamble-ar.tex"
     ;;
   *)
     echo "usage: $0 en|ar" >&2
@@ -52,7 +59,7 @@ echo "pandoc: building $out ..."
 pandoc \
   --metadata-file="$meta" \
   --from=gfm \
-  --pdf-engine=xelatex \
+  --pdf-engine="$engine" \
   --include-in-header="$here/pandoc/preamble.tex" \
   --toc --toc-depth=1 \
   --resource-path="$srcdir" \

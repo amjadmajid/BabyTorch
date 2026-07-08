@@ -24,15 +24,21 @@ ELISION = re.compile(r"^[ \t]*# \.\.\.[ \t]*\n", re.M)
 
 
 def _snippets():
-    for md in sorted(glob.glob(os.path.join(REPO, "book", "*.md"))):
+    # Scan the English book (book/*.md) AND the Arabic edition (book/ar/*.md):
+    # code inside a source box must stay verbatim in *both* editions, since
+    # translation never touches code.
+    mds = (glob.glob(os.path.join(REPO, "book", "*.md"))
+           + glob.glob(os.path.join(REPO, "book", "ar", "*.md")))
+    for md in sorted(mds):
         with open(md, encoding="utf-8") as f:
             text = f.read()
+        rel = os.path.relpath(md, os.path.join(REPO, "book"))   # unique id: "ar/…"
         for block in DETAILS.findall(text):
             m = SOURCE.search(block)
             if not m:
                 continue
             for i, code in enumerate(FENCE.findall(block)):
-                yield os.path.basename(md), m.group(1), i, code
+                yield rel, m.group(1), i, code
 
 
 CASES = list(_snippets())
