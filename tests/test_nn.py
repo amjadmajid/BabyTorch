@@ -109,6 +109,22 @@ def test_maxpool_halves():
     assert out.shape == (1, 1, 2, 2)
 
 
+def test_upsample_doubles_and_grad():
+    # forward: nearest-neighbour copy of each pixel into a 2x2 block
+    x = Tensor(np.array([[[[1.0, 2.0], [3.0, 4.0]]]]))          # (1, 1, 2, 2)
+    out = x.upsample(2)
+    assert out.shape == (1, 1, 4, 4)                            # the counterpart to MaxPool
+    expected = np.array([[[[1, 1, 2, 2], [1, 1, 2, 2],
+                           [3, 3, 4, 4], [3, 3, 4, 4]]]], dtype=float)
+    assert np.allclose(babytorch.to_numpy(out.data), expected)
+
+    # backward: the adjoint of a copy is a sum, so grad sum-pools each block.
+    # A non-uniform weighting makes the finite-difference check meaningful.
+    W = np.arange(16, dtype=np.float64).reshape(1, 1, 4, 4)
+    check_gradient(lambda t: (t.upsample(2) * Tensor(W)).sum(),
+                   np.random.default_rng(0).standard_normal((1, 1, 2, 2)))
+
+
 def test_save_and_load_roundtrip(tmp_path):
     model = nn.Sequential(nn.Linear(4, 8, nn.ReLU()), nn.Linear(8, 2))
     x = babytorch.randn(3, 4)
