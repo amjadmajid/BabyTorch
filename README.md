@@ -31,6 +31,7 @@ Optional extras:
 ```bash
 pip install -e ".[viz]"             # loss curves + computation-graph drawing
 pip install -e ".[gpu]"             # GPU acceleration via CuPy (CUDA 12.x)
+pip install -e ".[mlx]"             # Apple-Silicon GPU (Metal) via MLX — experimental
 pip install -e ".[dev]"             # everything plus pytest
 ```
 
@@ -40,7 +41,7 @@ BabyTorch runs on the CPU out of the box on any platform — Linux, macOS, Windo
 
 ```python
 import babytorch
-babytorch.set_device("cpu")      # in code: "cpu", "cuda", or "auto"
+babytorch.set_device("cpu")      # in code: "cpu", "cuda", "mps", or "auto"
 ```
 
 ```bash
@@ -48,9 +49,9 @@ BABYTORCH_DEVICE=cpu python train.py     # environment variable (initial device)
 python train.py --device cpu            # CLI flag on the BabyGPT scripts
 ```
 
-Pick the device **before** building tensors or models — arrays don't migrate between libraries after creation. There is no other GPU-specific code to learn: every module does its math through a single `xp` alias that resolves to NumPy or CuPy (see [`babytorch/backend.py`](babytorch/backend.py)).
+Pick the device **before** building tensors or models — arrays don't migrate between libraries after creation. There is no other GPU-specific code to learn: every module does its math through a single `xp` alias that resolves to NumPy, CuPy, or MLX (see [`babytorch/backend.py`](babytorch/backend.py)).
 
-**macOS note:** Macs have no CUDA, so BabyTorch runs on the CPU there (everything works, just slower for the bigger models). An Apple-Silicon GPU backend via MLX is on the roadmap — see `TODO.md`.
+**macOS note:** Macs have no CUDA, so BabyTorch runs on the CPU there (everything works, just slower for the bigger models). On **Apple-Silicon** Macs there is also an *experimental* Metal backend via MLX — `pip install -e ".[mlx]"`, then `set_device("mps")` (or `BABYTORCH_DEVICE=mps`). It is new and still being validated on device, so `auto` won't pick it for you; on Intel Macs MLX is unavailable. See `TODO.md`.
 
 ## The Book
 

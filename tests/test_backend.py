@@ -19,6 +19,14 @@ def _has_gpu():
         return False
 
 
+def _has_mlx():
+    try:
+        import mlx.core  # noqa: F401  (present only on Apple Silicon)
+        return True
+    except Exception:
+        return False
+
+
 @pytest.fixture
 def restore_device():
     """Put the device back the way the rest of the suite expects it."""
@@ -76,3 +84,46 @@ def test_set_device_cuda_roundtrip(restore_device):
 def test_cuda_unavailable_raises_helpfully(restore_device):
     with pytest.raises(RuntimeError):
         babytorch.set_device("cuda")
+
+
+@pytest.mark.skipif(_has_mlx(), reason="only meaningful without MLX installed")
+def test_mps_unavailable_raises_helpfully(restore_device):
+    # 'mps' and its alias 'mlx' are *recognised* device names: without an MLX
+    # install they raise RuntimeError ("known but unavailable"), exactly like
+    # 'cuda' without a GPU -- and a leftover failed switch must not disturb
+    # the active (CPU) backend.
+    for name in ("mps", "mlx"):
+        with pytest.raises(RuntimeError):
+            babytorch.set_device(name)
+    assert isinstance(babytorch.ones(2, 2).data, np.ndarray)
+    # A genuine typo is still a ValueError, not the unavailable-RuntimeError.
+    with pytest.raises(ValueError):
+        babytorch.set_device("metal")
+
+
+@pytest.mark.skipif(not _has_mlx(), reason="no MLX / not Apple Silicon")
+def test_set_device_mps_roundtrip(restore_device):
+    # Runs only on an Apple-Silicon Mac with MLX installed -- this is the
+    # real validation of babytorch/mlx_backend.py (authored without a device
+    # to run it on).  If the adapter has bugs, they surface here.
+    assert babytorch.set_device("mps") == "mps"
+
+    t = babytorch.randn(4, 3)
+    assert type(t.data).__module__.split(".")[0] == "mlx"
+    assert isinstance(t.numpy(), np.ndarray)      # host copy works
+
+    # A tiny training step, end to end on the Metal backend.
+    import babytorch.nn as nn
+    from babytorch.optim import SGD
+    model = nn.Linear(3, 1)
+    optimizer = SGD(model.parameters(), learning_rate=0.1)
+    loss = ((model(t) - 1.0) ** 2).mean()
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    assert np.isfinite(loss.item())
+
+    # Switching back to the CPU: MLX arrays made earlier still convert cleanly.
+    babytorch.set_device("cpu")
+    assert isinstance(babytorch.ones(2, 2).data, np.ndarray)
+    assert isinstance(babytorch.to_numpy(t.data), np.ndarray)

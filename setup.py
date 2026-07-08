@@ -21,10 +21,14 @@ setup(
     ],
     # Optional extras:
     #   pip install -e ".[gpu]"   -> GPU acceleration via CuPy (CUDA 12.x)
+    #   pip install -e ".[mlx]"   -> Apple-Silicon GPU (Metal) via MLX
     #   pip install -e ".[viz]"   -> loss curves and computation-graph drawing
     #   pip install -e ".[dev]"   -> everything plus the test runner
     extras_require={
         'gpu': ['cupy-cuda12x'],
+        # MLX ships only Apple-Silicon wheels; the marker keeps this a no-op
+        # (rather than an error) on Intel Macs, Linux and Windows.
+        'mlx': ['mlx; platform_system == "Darwin" and platform_machine == "arm64"'],
         'viz': ['matplotlib', 'graphviz'],
         'dev': ['pytest', 'matplotlib', 'graphviz'],
     },

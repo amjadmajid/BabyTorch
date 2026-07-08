@@ -190,10 +190,11 @@ class _XP:
     Because modules bind ``xp`` once (``from .backend import xp``) but
     every *use* is an attribute access (``xp.zeros``), routing the
     lookup through ``__getattr__`` lets :func:`set_device` swap the
-    library underneath all of them at once.
+    library underneath all of them at once.  For MLX the "library" is the
+    :mod:`babytorch.mlx_backend` adapter module rather than MLX itself.
     """
 
-    _lib = None  # numpy or cupy, set by set_device()
+    _lib = None  # numpy, cupy, or the mlx_backend adapter; set by set_device()
 
     def __getattr__(self, name):
         return getattr(_XP._lib, name)
@@ -201,18 +202,22 @@ class _XP:
 
 ```python
 def set_device(name):
-    """Select the array library: ``"cpu"``, ``"cuda"`` (or ``"gpu"``), or
-    ``"auto"``.  Returns the name of the device actually selected.
+    """Select the array library: ``"cpu"``, ``"cuda"`` (or ``"gpu"``),
+    ``"mps"`` (or ``"mlx"``), or ``"auto"``.  Returns the name of the device
+    actually selected.
 
-    Call it *before* creating tensors or models (see the module
-    docstring for why).  ``"cuda"`` raises with an explanation if no
-    usable GPU stack is present; ``"auto"`` never raises.
+    Call it *before* creating tensors or models (see the module docstring
+    for why).  ``"cuda"`` and ``"mps"`` raise with an explanation if their
+    GPU stack is not present; ``"auto"`` never raises.
     """
     global DEVICE
     name = name.lower()
     if name in ("cuda", "gpu"):
         _XP._lib = _cuda_library()
         DEVICE = "cuda"
+    elif name in ("mps", "mlx"):
+        _XP._lib = _mlx_library()
+        DEVICE = "mps"
     elif name == "cpu":
         import numpy
         _XP._lib = numpy
@@ -224,7 +229,7 @@ def set_device(name):
             return set_device("cpu")
     else:
         raise ValueError(
-            f"unknown device {name!r}: expected 'cpu', 'cuda' or 'auto'")
+            f"unknown device {name!r}: expected 'cpu', 'cuda', 'mps' or 'auto'")
     return DEVICE
 ```
 

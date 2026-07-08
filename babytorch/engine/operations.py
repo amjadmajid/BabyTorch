@@ -190,7 +190,9 @@ class SliceOperation(Operation):
         ``scatter_add`` and not plain assignment.
         """
         result = xp.zeros_like(self.a.data)
-        scatter_add(result, self.indices, grad)
+        # scatter_add returns the accumulated array: in place for NumPy/CuPy,
+        # a fresh array for the functional MLX backend.
+        result = scatter_add(result, self.indices, grad)
         return result,
 
 
