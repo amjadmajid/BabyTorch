@@ -790,6 +790,133 @@ def fig_generation():
 
 
 # ---------------------------------------------------------------------------
+# Part III figures: reinforcement learning
+# ---------------------------------------------------------------------------
+
+def fig_rl_loop():
+    W, H = 880, 400
+    b = [title_block("Reinforcement learning: the agent–environment loop",
+                     "no dataset — the agent acts, the game answers with a reward and a new state, and it learns to score higher")]
+
+    ax, ex, cy = 250, 630, 205
+    bw, bh = 214, 96
+    b.append(block(ax, cy - bh / 2, bw, bh, ORANGE, "Agent",
+                   "policy  π(a | s)", 15, 12))
+    b.append(block(ex, cy - bh / 2, bw, bh, GRAY, "Environment",
+                   "GridWorld · Snake", 15, 12))
+
+    # top: the action flows from agent to environment
+    b.append(path(f"M {ax + 50} {cy - bh / 2} L {ax + 50} 133 L {ex} 133 L {ex} {cy - bh / 2}",
+                  marker=True))
+    b.append(pill((ax + ex) / 2 + 30, 133, 120, "action  aₜ", 12, YELLOW))
+    # bottom: reward + next state flow back from environment to agent
+    b.append(path(f"M {ex - 50} {cy + bh / 2} L {ex - 50} 277 L {ax} 277 L {ax} {cy + bh / 2}",
+                  marker=True, marker_id="arr-blue", stroke=BLUE[1]))
+    b.append(pill((ax + ex) / 2 - 30, 277, 244, "reward  rₜ   +   next state  sₜ₊₁", 12, BLUE))
+
+    b.append(text(W / 2, 335,
+                  "The goal: choose actions to maximise the return  G = r₀ + γ r₁ + γ² r₂ + …  (γ < 1 values sooner rewards more).",
+                  11, INK2))
+    b.append(legend(40, H - 26, [(ORANGE, "agent / policy"), (GRAY, "environment"),
+                                 (YELLOW, "action"), (BLUE, "reward & state")]))
+    save("fig-rl-loop.svg", svg(W, H, "\n".join(b)))
+
+
+def fig_policy_gradient():
+    W, H = 880, 486
+    b = [title_block("Policy gradient: turn one played episode into a better policy",
+                     "REINFORCE → Actor-Critic → PPO differ only in the weight they put on each action")]
+
+    y0 = 132
+    b.append(text(40, y0 - 20, "One episode, start to finish", 12, INK, "600", "start"))
+    xs = [110, 250, 390, 520]
+    steps = [("s₀", "a₀", "r₀"), ("s₁", "a₁", "r₁"), ("s₂", "a₂", "r₂"), ("…", "", "")]
+    for i, x in enumerate(xs):
+        s, a, r = steps[i]
+        b.append(block(x, y0, 86, 38, BLUE, s, None, 13))
+        if a:
+            b.append(text(x, y0 + 60, f"action {a}", 9.5, MUTED))
+            b.append(text(x, y0 + 74, f"reward {r}", 9.5, MUTED))
+        if i < len(xs) - 1:
+            b.append(line(x + 43, y0 + 19, xs[i + 1] - 43, y0 + 19))
+
+    b.append(path(f"M 300 {y0 + 78} L 300 {y0 + 104}", marker=True))
+    b.append(block(300, y0 + 106, 380, 38, GRAY,
+                   "return  Gₜ = rₜ + γ rₜ₊₁ + γ² rₜ₊₂ + …", None, 12))
+    b.append(path(f"M 300 {y0 + 144} L 300 {y0 + 170}", marker=True))
+    b.append(block(300, y0 + 172, 380, 46, RED,
+                   "loss = − log π(aₜ | sₜ) · Aₜ", "gradient ascent on reward", 13))
+    b.append(text(300, y0 + 240, "make high-advantage actions more likely", 10.5, MUTED))
+
+    px = 600
+    b.append(rect(px, 106, 248, 264, "#ffffff", CONTAINER[1], rx=12, sw=1.3))
+    b.append(text(px + 18, 132, "What is the advantage Aₜ?", 12.5, INK, "700", "start"))
+    rows = [
+        ("REINFORCE", "Gₜ − baseline (mean)", ORANGE),
+        ("Actor-Critic", "Gₜ − V(sₜ),  V learned", AQUA),
+        ("PPO", "clip the ratio · Aₜ", VIOLET),
+    ]
+    ry = 170
+    for name, formula, col in rows:
+        b.append(rect(px + 18, ry - 13, 14, 14, col[0], col[1], rx=3, sw=1.2))
+        b.append(text(px + 40, ry, name, 11.5, INK, "600", "start"))
+        b.append(text(px + 40, ry + 17, formula, 10, INK2, "normal", "start", font=MONO))
+        ry += 58
+    b.append(text(px + 18, ry + 2, "Same gradient, better baseline:", 10, MUTED, anchor="start"))
+    b.append(text(px + 18, ry + 16, "less noise, faster learning.", 10, MUTED, anchor="start"))
+
+    b.append(legend(40, H - 24, [(BLUE, "state"), (GRAY, "return"),
+                                 (RED, "loss / gradient")]))
+    save("fig-policy-gradient.svg", svg(W, H, "\n".join(b)))
+
+
+def fig_dqn():
+    W, H = 880, 452
+    b = [title_block("DQN: learn Q(s, a), and two tricks that keep it stable",
+                     "replay breaks the correlation between steps; a slow target network gives the Bellman update something steady to aim at")]
+
+    # -- left column: environment -> transitions -> replay buffer ----------
+    b.append(block(150, 110, 176, 50, GRAY, "Environment", "play & collect", 12.5))
+    b.append(path("M 150 160 L 150 184", marker=True))
+    b.append(pill(150, 200, 190, "(s, a, r, s′)", 11, GRAY, mono=True))
+    b.append(path("M 150 216 L 150 250", marker=True))
+    b.append(block(150, 252, 190, 52, GRAY, "Replay buffer", "a ring of past steps", 12))
+
+    # random batch feeds both networks (a little bus at x = 340)
+    b.append(path("M 245 278 L 340 278", marker=False))
+    b.append(text(300, 268, "random batch", 9.5, MUTED))
+    b.append(f"<line x1='340' y1='163' x2='340' y2='325' stroke='{INK2}' stroke-width='1.6'/>")
+    b.append(path("M 340 163 L 366 163", marker=True))          # -> Q-network
+    b.append(path("M 340 325 L 366 325", marker=True))          # -> target network
+
+    # -- middle: the two networks ------------------------------------------
+    b.append(block(470, 138, 196, 50, ORANGE, "Q-network", "Q(s, a) — trained", 12.5))
+    b.append(block(470, 300, 196, 50, AQUA, "Target network", "slow copy of Q", 12))
+    # soft update: the Q-network slowly trails into the target
+    b.append(path("M 470 188 L 470 298", stroke=MUTED, sw=1.3, dash="4 3", marker=True))
+    b.append(text(478, 246, "soft update", 9, MUTED, anchor="start"))
+
+    # -- right: the loss (top) compares Q(s,a) with the Bellman target ------
+    b.append(block(730, 138, 250, 50, RED, "Huber loss", "(Q(s,a) − target)²", 12.5))
+    b.append(block(730, 300, 250, 50, GRAY, "r + γ maxₐ Q_target(s′, a)",
+                   "the Bellman target", 11.5))
+    b.append(path("M 568 163 L 603 163", marker=True))          # Q(s,a) -> loss
+    b.append(path("M 568 325 L 603 325", marker=True))          # target net -> Bellman target
+    b.append(path("M 730 300 L 730 190", marker=True))          # Bellman target -> loss
+    # gradient from the loss back into the Q-network
+    b.append(path("M 730 138 L 730 110 L 470 110 L 470 136",
+                  stroke=RED[1], sw=1.5, dash="5 4", marker=True, marker_id="arr-red"))
+    b.append(text(600, 102, "gradient → Q-network", 9.5, RED[1]))
+
+    b.append(text(40, H - 44,
+                  "Act ε-greedily: a random action with probability ε (high at first, then decaying), the argmax of Q otherwise.",
+                  10.5, INK2, "normal", "start"))
+    b.append(legend(40, H - 22, [(GRAY, "environment / data"), (ORANGE, "Q-network"),
+                                 (AQUA, "target network"), (RED, "loss")]))
+    save("fig-dqn.svg", svg(W, H, "\n".join(b)))
+
+
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     fig_babygpt()
@@ -801,3 +928,6 @@ if __name__ == "__main__":
     fig_attention()
     fig_multihead()
     fig_generation()
+    fig_rl_loop()
+    fig_policy_gradient()
+    fig_dqn()
