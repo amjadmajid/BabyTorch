@@ -70,9 +70,10 @@ def load_checkpoint(path):
 
 
 def sample_text(model, tokenizer, prompt="\n", max_new_tokens=300,
-                temperature=0.8, top_k=None):
+                temperature=0.8, top_k=None, use_cache=True):
     """Generate a text continuation from ``prompt`` and return it as a string."""
     ids = tokenizer.encode(prompt) or [0]
     out = model.generate(np.array(ids), max_new_tokens=max_new_tokens,
-                         temperature=temperature, top_k=top_k)
+                         temperature=temperature, top_k=top_k,
+                         use_cache=use_cache)
     return tokenizer.decode(babytorch.to_numpy(out)[0].tolist())

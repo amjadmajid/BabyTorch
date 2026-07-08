@@ -21,6 +21,7 @@ model automatically, exactly as it does for a two-line linear regression.
 | [`train.py`](train.py) | Pretrain BabyGPT on a text corpus (Tiny Shakespeare by default). |
 | [`finetune.py`](finetune.py) | Continue training a pretrained model on a smaller, stylistically different corpus. |
 | [`generate.py`](generate.py) | Load a checkpoint and generate text (inference). |
+| [`attention_viz.py`](attention_viz.py) | Draw a trained layer's attention weights as heatmaps — see what the heads learned. |
 | [`common.py`](common.py) | Small shared helpers (batching, checkpointing, sampling). |
 
 ## Quickstart
@@ -38,10 +39,20 @@ python train.py --steps 3000
 # 2. Generate some Shakespeare-flavoured text.
 python generate.py --prompt "ROMEO:" --tokens 400 --temperature 0.8
 
-# 3. Finetune the same model on nursery rhymes, then generate again.
+# 3. Look inside: draw the attention heads as heatmaps (saves attention.png).
+python attention_viz.py --prompt "First Citizen:"
+
+# 4. Finetune the same model on nursery rhymes, then generate again.
 python finetune.py
 python generate.py --checkpoint checkpoints/babygpt_finetuned --prompt "Twinkle"
 ```
+
+Generation uses a **KV cache** by default: after the prompt is forwarded
+once, every step feeds only the newest token and attends to the keys and
+values remembered by each block, instead of re-running the whole context.
+`generate.py` prints tokens/sec — compare with `--no_cache` to feel the
+difference. (Chapter 8 of the book explains the cache; the implementation
+is ~20 commented lines in [`model.py`](model.py).)
 
 Force the CPU (or GPU) for any command with the `--device` flag (or the
 `BABYTORCH_DEVICE` environment variable, which works for any BabyTorch

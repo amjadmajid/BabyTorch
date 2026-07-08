@@ -16,6 +16,7 @@ one, appends it, and repeats.  The knobs shape *how* it samples:
 import argparse
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -30,6 +31,8 @@ def main():
     p.add_argument("--tokens", type=int, default=400)
     p.add_argument("--temperature", type=float, default=0.8)
     p.add_argument("--top_k", type=int, default=None)
+    p.add_argument("--no_cache", action="store_true",
+                   help="disable the KV cache (to feel what it buys)")
     p.add_argument("--device", default=None, choices=["auto", "cpu", "cuda", "gpu"],
                    help="where to run (default: auto -- GPU if available)")
     args = p.parse_args()
@@ -41,10 +44,16 @@ def main():
     print(f"Loaded {model.num_parameters():,}-parameter model "
           f"(vocab {tokenizer.vocab_size}, block {config['block_size']})\n")
 
+    start = time.time()
     text = sample_text(model, tokenizer, prompt=args.prompt,
                        max_new_tokens=args.tokens,
-                       temperature=args.temperature, top_k=args.top_k)
+                       temperature=args.temperature, top_k=args.top_k,
+                       use_cache=not args.no_cache)
+    elapsed = time.time() - start
     print(text)
+    print(f"\n[{args.tokens} tokens in {elapsed:.1f}s -- "
+          f"{args.tokens / elapsed:.0f} tok/s"
+          f"{', KV cache off' if args.no_cache else ''}]")
 
 
 if __name__ == "__main__":

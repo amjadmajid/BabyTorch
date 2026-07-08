@@ -92,6 +92,25 @@ tokens, zero the rest, renormalize. It cuts off the long tail of
 individually-unlikely junk tokens whose *combined* probability is large
 enough to derail a sentence.
 
+**The KV cache** removes generation's hidden waste. Each lap of the
+loop needs one row of logits — the newest — but a naive forward
+recomputes attention over the *whole* context to produce it: the keys
+and values of every old position are rebuilt from scratch, lap after
+lap, only to come out identical every time. So `generate` keeps them.
+The prompt is forwarded once and every block stores its `k` and `v`
+arrays (**prefill**); after that, each lap forwards **only the token
+sampled on the previous lap**, computes its single new q, k and v, and
+attends to the stored past. Same logits, a fraction of the work —
+every production LLM serves you through a cache like this.
+
+Two details of the cache are worth reading in the code. A lone new
+query needs no masking: every cached position *is* its past (the mask
+row it slices is the last one — all zeros). And when the context
+outgrows `block_size`, the window slides; our position embeddings are
+absolute, so every cached key suddenly belongs to a shifted position
+id, and the stale cache is rebuilt. `generate.py` times itself — run
+it with `--no_cache` to feel what the cache buys.
+
 <details>
 <summary><b>How it's implemented</b> — <code>tutorials/llm/model.py</code> (the writing loop, unabridged)</summary>
 
@@ -101,12 +120,32 @@ enough to derail a sentence.
             idx = idx[None, :]
 
         self.eval()
+        caches = self.empty_kv_caches() if use_cache else None
         with babytorch.no_grad():
             for _ in range(max_new_tokens):
-                # Never feed more than block_size tokens of context.
+                # Never use more than block_size tokens of context.
                 idx_cond = idx[:, -self.block_size:]
-                logits = self.forward(idx_cond).data      # (B, T, vocab)
-                logits = logits[:, -1, :] / temperature   # last step: (B, vocab)
+
+                if caches is None:
+                    # No cache: forward the whole context, every lap.
+                    logits = self.forward(idx_cond).data
+                elif caches[0]["k"] is None:
+                    # First lap ("prefill"): run the whole prompt once and
+                    # let every block store its keys and values.
+                    logits = self.forward(idx_cond, caches).data
+                elif caches[0]["k"].shape[2] < self.block_size:
+                    # Steady state: the past is cached -- forward only the
+                    # token sampled on the previous lap.
+                    logits = self.forward(idx[:, -1:], caches).data
+                else:
+                    # The context window is full and now slides one step
+                    # per token.  Our position embeddings are absolute, so
+                    # every cached key belongs to a position id that just
+                    # shifted -- the cache is stale; rebuild it.
+                    caches = self.empty_kv_caches()
+                    logits = self.forward(idx_cond, caches).data
+
+                logits = logits[:, -1, :] / temperature   # last position: (B, vocab)
 
                 if top_k is not None:
                     k = min(top_k, logits.shape[-1])
@@ -154,6 +193,7 @@ identical model anywhere.
 cd tutorials/llm
 python train.py --steps 3000                    # pretrain (GPU: minutes)
 python generate.py --prompt "ROMEO:" --tokens 400 --temperature 0.8
+python attention_viz.py                         # draw what the heads learned
 python finetune.py                              # adapt to nursery rhymes
 python generate.py --checkpoint checkpoints/babygpt_finetuned --prompt "Twinkle"
 ```
@@ -168,18 +208,20 @@ python train.py --steps 1500 --block_size 64 --n_embd 96 --n_head 4 --n_layer 4
 Then experiment. Good first ones: swap `CharTokenizer` for
 [`BPETokenizer`](../babytorch/text/tokenizers.py) and compare loss *per
 character* (fair units — BPE predicts more text per token); train on
-your own `--corpus file.txt`; print the `(T, T)` attention weights of a
-trained head and look for structure (they are just `att.data` in
-chapter 6's code); push `temperature` to extremes and watch the ladder
-in reverse.
+your own `--corpus file.txt`; draw your trained heads' `(T, T)`
+attention weights with
+[`attention_viz.py`](../tutorials/llm/attention_viz.py) and look for
+structure — the previous-token diagonal, a bright column at a newline
+(then read the script: it is just chapter 6's `att.data`, kept by a
+flag); push `temperature` to extremes and watch the ladder in reverse.
 
 ## Where BabyGPT ends
 
 Between this 2.7M-parameter model and a frontier LLM lie, honestly:
 about five orders of magnitude of scale (parameters, data, compute);
-engineering for that scale (fused GPU kernels, mixed precision, KV
-caches so generation doesn't recompute the past, training sharded
-across thousands of devices); and post-training — instruction tuning
+engineering for that scale (fused GPU kernels, mixed precision,
+batched serving, training sharded across thousands of devices); and
+post-training — instruction tuning
 and reinforcement learning from human feedback, which is finetuning
 (the kind you just did) aimed at "be helpful" rather than "rhyme".
 
@@ -229,6 +271,21 @@ rate erases the pretrained knowledge — catastrophic forgetting, fast.
 
 </details>
 
+**Q4.** The KV cache holds 10 positions and `generate` forwards the
+one token it just sampled. Inside each block, what are the shapes of
+`q` and of the attention table `att` — and why does causality survive
+without masking anything out?
+
+<details><summary>Answer</summary>
+
+`q` is `(B, n_head, 1, head_size)` — a single query — and `att` is
+`(B, n_head, 1, 11)`: one row of weights over the 10 cached positions
+plus the token itself. Nothing needs masking because everything in the
+cache is this position's past; the row the code slices from the mask
+is the last one, which is all zeros.
+
+</details>
+
 **Build it** — implement `top_p_filter` (nucleus sampling: keep a fixed
 amount of *probability* instead of top-k's fixed *count*) and
 ★ `generate_greedy` (then watch greedy text loop — the reason we
@@ -243,6 +300,7 @@ sample), in
 [`tutorials/llm/train.py`](../tutorials/llm/train.py) ·
 [`tutorials/llm/generate.py`](../tutorials/llm/generate.py) ·
 [`tutorials/llm/finetune.py`](../tutorials/llm/finetune.py) ·
+[`tutorials/llm/attention_viz.py`](../tutorials/llm/attention_viz.py) ·
 [`tutorials/llm/common.py`](../tutorials/llm/common.py)
 
 [← Chapter 7: The Transformer](07-transformer.md) | [Contents](README.md) | *End of the book — [back to the repository](../README.md)*
