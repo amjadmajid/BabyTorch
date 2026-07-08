@@ -1,58 +1,32 @@
-# Chapter 9 — Reinforcement Learning
+# Chapter 10 — Policy Gradients
 
-Every chapter so far learned from a **dataset**: a pile of examples with
-answers attached. A GPT learns from text where the "answer" is the next
-character; a classifier learns from images with labels. The loss compared
-the model's guess to a known truth.
+Chapter 9 solved GridWorld with a **table**: one number per state, filled
+in by the Bellman equation. That works because GridWorld has a couple of
+dozen states you can list. It is hopeless the moment the state is an
+image, a board, or a paragraph -- there are astronomically many states,
+and no table could hold them, let alone visit each enough to learn it.
 
-Reinforcement learning throws the answer key away. There is no dataset.
-An **agent** is dropped into a game, it takes **actions**, and all the
-game ever tells it is a **reward** -- a number, good or bad. Nobody says
-which action was right. The agent has to *discover* good behaviour by
-trying things and noticing what pays off.
+The rest of Part III rests on the one idea that escapes the table:
+**replace it with a network**. A network reads the state and
+*generalises* -- it gives a sensible answer for states it has never seen.
+That single move turns tabular RL into *deep* RL, and it opens two roads.
+This chapter takes the first: instead of learning what each state is
+*worth*, learn **how to act** directly -- a network that reads the state
+and outputs an action. That network is a **policy**, and training one
+turns out to be remarkably close to the supervised learning of Part I.
 
-That is a genuinely different kind of learning, and it needs only one new
-idea on top of Part I. Everything else -- `Linear`, `Adam`,
-`log_softmax`, `backward()` -- you already have. In fact this whole
-chapter is a port of a separate PyTorch project,
+Everything else you already have -- `Linear`, `Adam`, `log_softmax`,
+`backward()`. In fact this chapter and the next are a port of a separate
+PyTorch project,
 [deep-reinforcement-learning-games-from-scratch](https://github.com/amjadmajid/deep-reinforcement-learning-games-from-scratch),
 onto BabyTorch -- and the port is nearly a rename, because BabyTorch
 mirrors PyTorch. That is the subtext of Part III: if you can build a
 classifier, you can build an agent.
 
-## The loop: agent, environment, reward
-
-![The reinforcement-learning loop: an agent holding a policy pi(a given s) sends an action to the environment; the environment answers with a reward and the next state, which flow back to the agent; the agent's goal is to choose actions that maximise the discounted return](figures/fig-rl-loop.svg)
-
-The whole of RL is that loop. At each step the agent sees a **state**
-`s` (what the game looks like now), picks an **action** `a`, and the
-environment answers with a **reward** `r` and the next state `s'`. Round
-and round.
-
-The agent's goal is not to maximise the *next* reward -- it is to maximise
-the **return**, the total reward over the whole episode, with later
-rewards discounted a little:
-
-```
-G = r₀ + γ r₁ + γ² r₂ + …            (0 < γ < 1)
-```
-
-The discount `γ` (gamma, ~0.99) means "a reward now is worth slightly more
-than the same reward later" -- which, usefully, also makes *shorter* paths
-to a reward worth more than long ones.
-
-Our first game is **GridWorld**: an agent on a small grid, walls to
-avoid, a goal to reach. Every step costs `-1`; reaching the goal pays a
-`+10` bonus and ends the episode. So the return is high only for a short
-successful path -- exactly the behaviour we want the agent to find. It
-speaks the same `reset` / `step` language as any Gym environment:
-
-```python
-from gridworld import GridWorld
-env = GridWorld()
-obs, _ = env.reset()                       # obs: a 6-number view of the cell
-obs, reward, done, info = env.step(2)      # action in 0..3 (up/down/left/right)
-```
+We stay with **GridWorld** from chapter 9 -- every step costs `-1` and
+reaching the goal pays a `+10` bonus, so the return `G = r₀ + γ r₁ + γ²
+r₂ + …` is high only for a short successful path. The same `reset` /
+`step` loop drives every agent here.
 
 ## The policy: a network that chooses
 
@@ -305,4 +279,4 @@ loss and a replay buffer; try sketching `discounted_returns` and
 [`tutorials/rl/actor_critic.py`](../tutorials/rl/actor_critic.py) ·
 [`tutorials/rl/ppo.py`](../tutorials/rl/ppo.py)
 
-[← Chapter 8: Training a GPT](08-training-a-gpt.md) | [Contents](README.md) | [Chapter 10: Deep Q-Learning →](10-deep-q-learning.md)
+[← Chapter 9: Tabular Reinforcement Learning](09-tabular-methods.md) | [Contents](README.md) | [Chapter 11: Deep Q-Learning →](11-deep-q-learning.md)

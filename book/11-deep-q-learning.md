@@ -1,6 +1,6 @@
-# Chapter 10 — Deep Q-Learning
+# Chapter 11 — Deep Q-Learning
 
-Chapter 9 learned a **policy** directly: a network that maps a state to
+Chapter 10 learned a **policy** directly: a network that maps a state to
 action probabilities. This chapter takes reinforcement learning's other
 great road. Instead of learning *how to act*, learn *what things are
 worth* -- and then act greedily on that.
@@ -23,11 +23,12 @@ Q(s, a)  =  r  +  γ · maxₐ′ Q(s′, a′)
 This is the **Bellman equation**, and it is the entire training signal.
 It is a fixed point: a correct Q makes both sides equal. So we train a
 network to make its left side match its own (bootstrapped) right side.
-Classical RL fills in a `Q` *table*, one cell per state-action pair (the
-tabular [Q-learning](https://github.com/amjadmajid/deep-reinforcement-learning-games-from-scratch/tree/main/01_Reinforcement_learning/03_Qlearning)
-in the original repo does exactly that). **Deep Q-Learning** replaces the
-table with a network, so it can generalise across states it has never
-seen -- essential the moment the state is an image.
+Classical RL fills in a `Q` *table*, one cell per state-action pair --
+exactly the tabular [`q_learning`](../tutorials/rl/tabular.py) of
+[chapter 9](09-tabular-methods.md), which solved this very maze. **Deep
+Q-Learning** replaces the table with a network, so it can generalise
+across states it has never seen -- essential the moment the state is an
+image.
 
 ## DQN: two tricks that make it stable
 
@@ -171,11 +172,11 @@ straight into an RL agent with nothing new required.
 Between this and a game-playing or chat-aligning system at the frontier
 lie scale and a handful of refinements -- Double DQN and duelling heads,
 prioritised replay, stacking several frames so the agent can see motion,
-and thousands of parallel actors. But the ideas are the ones in these two
+and thousands of parallel actors. But the ideas are the ones in these
 chapters.
 
 And they close a loop with Part II. The "PO" in the RLHF that turns a raw
-language model into a helpful assistant is the **PPO** of chapter 9: the
+language model into a helpful assistant is the **PPO** of chapter 10: the
 policy is the LLM, an action is the next token, and the reward comes from
 a model trained on human preferences. The Transformer you built and the
 agent you just trained are the same machine, pointed at different games.
@@ -241,4 +242,4 @@ to overestimate). It is a two-line change to the target computation in
 [`tutorials/rl/common.py`](../tutorials/rl/common.py) ·
 [`tests/test_rl.py`](../tests/test_rl.py) (every agent, proven to learn)
 
-[← Chapter 9: Reinforcement Learning](09-reinforcement-learning.md) | [Contents](README.md) | *End of the book — [back to the repository](../README.md)*
+[← Chapter 10: Policy Gradients](10-policy-gradients.md) | [Contents](README.md) | *End of the book — [back to the repository](../README.md)*

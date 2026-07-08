@@ -81,8 +81,9 @@ game, and a reward to maximise.*
 
 | Chapter | What you will understand |
 |---------|--------------------------|
-| [9. Reinforcement learning](09-reinforcement-learning.md) | The agent–environment loop, and the policy-gradient family: REINFORCE, a learned value baseline (Actor-Critic), and the clipped objective of PPO — the algorithm behind RLHF. |
-| [10. Deep Q-Learning](10-deep-q-learning.md) | The other road: learn `Q(s, a)` and act greedily on it. Experience replay, target networks, and the same DQN playing Snake — first with hand-built features, then with convolutions. |
+| [9. Tabular reinforcement learning](09-tabular-methods.md) | The agent–environment loop, the return and the Bellman equation — on a grid small enough that the agent's knowledge fits in a table: value/policy iteration (model-based) and SARSA/Q-learning (model-free). |
+| [10. Policy gradients](10-policy-gradients.md) | Swap the table for a network that chooses actions directly: REINFORCE, a learned value baseline (Actor-Critic), and the clipped objective of PPO — the algorithm behind RLHF. |
+| [11. Deep Q-Learning](11-deep-q-learning.md) | The other road: learn `Q(s, a)` with a network and act greedily on it. Experience replay, target networks, and the same DQN playing Snake — first with hand-built features, then with convolutions. |
 
 Part III has a companion too: the [RL
 tutorial](../tutorials/rl/README.md) trains all four agents on GridWorld
@@ -119,13 +120,14 @@ tutorials/llm/
 └── finetune.py           ch. 8  finetuning
 
 tutorials/rl/
-├── common.py             ch. 9-10  Categorical, networks, returns, replay
+├── tabular.py            ch. 9  value/policy iteration, SARSA, Q-learning
 ├── gridworld.py          ch. 9  the GridWorld environment
-├── reinforce.py          ch. 9  REINFORCE (policy gradient)
-├── actor_critic.py       ch. 9  Actor-Critic (A2C)
-├── ppo.py                ch. 9  PPO
-├── dqn.py                ch. 10  Deep Q-Network
-└── snake.py, snake_dqn.py   ch. 10  Snake, with an MLP or a ConvNet
+├── common.py             ch. 10-11  Categorical, networks, returns, replay
+├── reinforce.py          ch. 10  REINFORCE (policy gradient)
+├── actor_critic.py       ch. 10  Actor-Critic (A2C)
+├── ppo.py                ch. 10  PPO
+├── dqn.py                ch. 11  Deep Q-Network
+└── snake.py, snake_dqn.py   ch. 11  Snake, with an MLP or a ConvNet
 ```
 
 A fair warning about what "baby" means: BabyTorch chooses the readable

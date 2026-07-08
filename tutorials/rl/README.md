@@ -30,6 +30,7 @@ The supporting cast:
 
 | File | What it holds |
 |------|---------------|
+| [`tabular.py`](tabular.py) | The classical on-ramp: value/policy iteration and SARSA/Q-learning on GridWorld, with a *table* instead of a network. |
 | [`gridworld.py`](gridworld.py) | The GridWorld maze -- a Gym-style `reset`/`step` environment, pure NumPy. |
 | [`snake.py`](snake.py) | The game of Snake, with feature-vector *or* raw-grid observations. |
 | [`snake_dqn.py`](snake_dqn.py) | `dqn.py` pointed at Snake -- with an MLP or a ConvNet. |
@@ -89,10 +90,25 @@ python snake_dqn.py --net grid --rows 6 --cols 6 --shaping 0.5   # raw board -> 
   `Conv2D` drops straight into an RL loop -- reward shaping (`--shaping`)
   helps its sparse signal a lot.
 
+## Start tabular, if you like
+
+Before the networks there is a table. [`tabular.py`](tabular.py) solves
+the *same* GridWorld with the four classical methods -- value iteration,
+policy iteration, SARSA and Q-learning -- and no neural network at all:
+
+```bash
+python tabular.py     # prints each method's policy as arrows on the board
+```
+
+It is the gentlest way in: the ideas (return, Bellman equation, greedy
+action, ε-greedy exploration) are all here, with nothing to hide behind.
+The deep agents above are what you do when the table gets too big to store.
+
 ## Where the ideas come from
 
-The book's **Part III** ([chapters 9–10](../../book/README.md)) explains
-all of this from the ground up -- the RL problem, the policy gradient, the
-Bellman equation, and PPO -- using the exact code in these files. The
-classic tabular precursors (Value Iteration, SARSA, Q-learning) live in
-the [original repository](https://github.com/amjadmajid/deep-reinforcement-learning-games-from-scratch).
+The book's **Part III** ([chapters 9–11](../../book/README.md)) explains
+all of this from the ground up -- the RL problem, the Bellman equation and
+the tabular methods (chapter 9), the policy gradient (chapter 10), and Deep
+Q-Learning (chapter 11) -- using the exact code in these files. The deep
+agents port the PyTorch originals from
+[deep-reinforcement-learning-games-from-scratch](https://github.com/amjadmajid/deep-reinforcement-learning-games-from-scratch).
