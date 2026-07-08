@@ -74,6 +74,23 @@ Part II has a companion you can run: the [BabyGPT
 tutorial](../tutorials/llm/README.md) pretrains, finetunes and samples a
 real model with the exact code these chapters explain.
 
+## Part III — Reinforcement learning
+
+*The same networks, a different kind of learning: no dataset — just a
+game, and a reward to maximise.*
+
+| Chapter | What you will understand |
+|---------|--------------------------|
+| [9. Reinforcement learning](09-reinforcement-learning.md) | The agent–environment loop, and the policy-gradient family: REINFORCE, a learned value baseline (Actor-Critic), and the clipped objective of PPO — the algorithm behind RLHF. |
+| [10. Deep Q-Learning](10-deep-q-learning.md) | The other road: learn `Q(s, a)` and act greedily on it. Experience replay, target networks, and the same DQN playing Snake — first with hand-built features, then with convolutions. |
+
+Part III has a companion too: the [RL
+tutorial](../tutorials/rl/README.md) trains all four agents on GridWorld
+and Snake with the exact code these chapters explain. It ports the
+PyTorch agents from
+[deep-reinforcement-learning-games-from-scratch](https://github.com/amjadmajid/deep-reinforcement-learning-games-from-scratch)
+onto BabyTorch — nearly a rename, because BabyTorch mirrors PyTorch.
+
 ## The map of the code
 
 Everything the book covers lives in these files:
@@ -100,6 +117,15 @@ tutorials/llm/
 ├── train.py              ch. 8  pretraining
 ├── generate.py           ch. 8  sampling
 └── finetune.py           ch. 8  finetuning
+
+tutorials/rl/
+├── common.py             ch. 9-10  Categorical, networks, returns, replay
+├── gridworld.py          ch. 9  the GridWorld environment
+├── reinforce.py          ch. 9  REINFORCE (policy gradient)
+├── actor_critic.py       ch. 9  Actor-Critic (A2C)
+├── ppo.py                ch. 9  PPO
+├── dqn.py                ch. 10  Deep Q-Network
+└── snake.py, snake_dqn.py   ch. 10  Snake, with an MLP or a ConvNet
 ```
 
 A fair warning about what "baby" means: BabyTorch chooses the readable

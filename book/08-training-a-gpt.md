@@ -303,4 +303,4 @@ sample), in
 [`tutorials/llm/attention_viz.py`](../tutorials/llm/attention_viz.py) ·
 [`tutorials/llm/common.py`](../tutorials/llm/common.py)
 
-[← Chapter 7: The Transformer](07-transformer.md) | [Contents](README.md) | *End of the book — [back to the repository](../README.md)*
+[← Chapter 7: The Transformer](07-transformer.md) | [Contents](README.md) | [Chapter 9: Reinforcement Learning →](09-reinforcement-learning.md)
