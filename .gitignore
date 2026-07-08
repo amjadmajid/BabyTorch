@@ -15,3 +15,6 @@ tutorials/llm/*.png
 tutorials/rl/*.png
 graphs/
 .pytest_cache/
+
+# Generated book PDFs and pandoc intermediates
+book/build/

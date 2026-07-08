@@ -1,0 +1,37 @@
+% Raw LaTeX preamble shared by the English and Arabic builds.
+% Included verbatim via pandoc --include-in-header (NOT processed as Markdown).
+
+% pandoc >= 3.1 emits an `alt=` key on \includegraphics (image alt text, for
+% accessible/tagged PDF); this TeX Live's graphicx doesn't know it -> make the
+% `alt` key a harmless no-op so figures don't error out.
+\makeatletter
+\@ifpackageloaded{graphicx}{}{\usepackage{graphicx}}
+\define@key{Gin}{alt}[]{}
+\makeatother
+
+% Wrap long code lines instead of letting them overflow the page.
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,breakanywhere,commandchars=\\\{\}}
+
+% A few rare Unicode glyphs that not every text font carries -> safe fallbacks,
+% so the book's inline math never renders as tofu (missing-glyph boxes).
+\usepackage{amssymb}
+\usepackage{pifont}   % \ding{72} = a filled star, for the "harder exercise" marker
+\usepackage{newunicodechar}
+% Subscripts / superscripts / accented Greek not in every text font.
+\newunicodechar{ₜ}{\textsubscript{t}}
+\newunicodechar{₀}{\textsubscript{0}}
+\newunicodechar{₁}{\textsubscript{1}}
+\newunicodechar{ₛ}{\textsubscript{s}}
+\newunicodechar{ᵀ}{\textsuperscript{T}}
+\newunicodechar{ᾱ}{\ensuremath{\bar{\alpha}}}
+\newunicodechar{⋯}{\ensuremath{\cdots}}
+% Arrows and relations STIX Two Text (the text cut) lacks -> math equivalents.
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{←}{\ensuremath{\leftarrow}}
+\newunicodechar{↑}{\ensuremath{\uparrow}}
+\newunicodechar{↓}{\ensuremath{\downarrow}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{≠}{\ensuremath{\neq}}
+\newunicodechar{√}{\ensuremath{\surd}}
+\newunicodechar{★}{\ding{72}}
