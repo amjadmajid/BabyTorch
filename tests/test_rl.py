@@ -25,6 +25,7 @@ import reinforce            # noqa: E402
 import actor_critic         # noqa: E402
 import dqn                  # noqa: E402
 import ppo                  # noqa: E402
+import tabular              # noqa: E402
 
 
 def tiny_env():
@@ -203,6 +204,53 @@ def test_dqn_learns_snake_features():
     q_net, history = dqn.train(episodes=200, env=env, eps_decay=2000, seed=0)
     # Clearly better late than early: surviving longer and eating more.
     assert np.mean(history[-30:]) > np.mean(history[:30]) + 3.0
+
+
+def test_gridworld_dynamics_matches_step():
+    """The model (transition) must agree with actually stepping the env."""
+    env = gridworld.GridWorld(shape=(4, 4), obstacles=[(1, 1)])
+    for s in env.states():
+        for a in range(env.n_actions):
+            ns, r = env.transition(s, a)
+            env.pos, env.steps = s, 0          # place the agent at s
+            if env.is_terminal(s):
+                continue
+            _, step_r, _, _ = env.step(a)
+            assert env.pos == ns and step_r == r
+
+
+def test_value_and_policy_iteration_agree_on_optimum():
+    """Two exact DP methods must find the *same* optimal policy."""
+    env = gridworld.GridWorld()
+    _, pi_vi = tabular.value_iteration(env)
+    _, pi_pi = tabular.policy_iteration(env)
+    non_terminal = [s for s in env.states() if not env.is_terminal(s)]
+    assert all(pi_vi[s] == pi_pi[s] for s in non_terminal)
+
+
+def test_q_learning_greedy_policy_solves_the_maze():
+    """Following the learned greedy policy should reach the goal quickly."""
+    tabular.np.random.seed(0)
+    env = gridworld.GridWorld()
+    _, policy = tabular.q_learning(env, episodes=400)
+    # walk the greedy policy from the start
+    env.reset()
+    for _ in range(env.rows * env.cols):
+        _, _, done, info = env.step(policy[env.pos])
+        if done:
+            break
+    assert info["reached_goal"]
+
+
+def test_sarsa_learns_positive_values():
+    tabular.np.random.seed(0)
+    env = gridworld.GridWorld()
+    Q, _ = tabular.sarsa(env, episodes=300)
+    # states next to the goal should have clearly higher value than far ones
+    import numpy as _np
+    near = Q[(env.rows - 1, env.cols - 2)].max()
+    far = Q[(0, 0)].max()
+    assert near > far
 
 
 def test_dqn_grid_convnet_runs():

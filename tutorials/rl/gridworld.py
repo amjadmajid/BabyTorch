@@ -120,6 +120,39 @@ class GridWorld:
         """Can the agent stand here? (on the board and not an obstacle)."""
         return self._on_board(pos) and pos not in self.obstacles
 
+    # ------------------------------------------------------------------
+    # The model, laid bare -- for the tabular / dynamic-programming
+    # methods of chapter 9 (value iteration, policy iteration).  Those
+    # need to know the rules in advance: every state, and where each
+    # action leads.  GridWorld is deterministic, so a transition is a
+    # single (next_state, reward), not a distribution.
+    # ------------------------------------------------------------------
+
+    def states(self):
+        """Every cell the agent can occupy (the whole state space)."""
+        return [(r, c) for r in range(self.rows) for c in range(self.cols)
+                if (r, c) not in self.obstacles]
+
+    def is_terminal(self, state):
+        """The goal is absorbing: the episode ends when you step onto it."""
+        return tuple(state) == self.goal
+
+    def transition(self, state, action):
+        """Where does ``action`` lead from ``state``? -> (next_state, reward).
+
+        Mirrors :meth:`step` exactly, but as a pure function of ``state``
+        with no side effects -- a blocked move stays put, and the reward is
+        ``-1`` plus the goal bonus when the move lands on the goal.
+        """
+        state = tuple(state)
+        if self.is_terminal(state):
+            return state, 0.0                    # nothing follows the goal
+        drow, dcol = ACTIONS[int(action)]
+        target = (state[0] + drow, state[1] + dcol)
+        nxt = target if self._is_free(target) else state
+        reward = -1.0 + (self.goal_reward if nxt == self.goal else 0.0)
+        return nxt, reward
+
     def _observe(self):
         """The six-number view the agent gets (see the module docstring)."""
         blocked = [0.0 if self._is_free((self.pos[0] + dr, self.pos[1] + dc))
