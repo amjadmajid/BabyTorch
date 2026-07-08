@@ -242,4 +242,4 @@ to overestimate). It is a two-line change to the target computation in
 [`tutorials/rl/common.py`](../tutorials/rl/common.py) ·
 [`tests/test_rl.py`](../tests/test_rl.py) (every agent, proven to learn)
 
-[← Chapter 10: Policy Gradients](10-policy-gradients.md) | [Contents](README.md) | *End of the book — [back to the repository](../README.md)*
+[← Chapter 10: Policy Gradients](10-policy-gradients.md) | [Contents](README.md) | [Chapter 12: Diffusion →](12-diffusion.md)

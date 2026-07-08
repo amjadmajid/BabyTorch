@@ -54,11 +54,12 @@ Pick the device **before** building tensors or models — arrays don't migrate b
 
 ## The Book
 
-The repository ships with a short book that explains the whole codebase in order — how a framework works, then how a GPT is built with it, then how the same machinery learns to play games:
+The repository ships with a short book that explains the whole codebase in order — how a framework works, then how a GPT is built with it, then how the same machinery learns to play games and to generate images:
 
 * **[Part I — The engine](book/README.md):** tensors, autograd, neural networks, training.
 * **[Part II — BabyGPT](book/README.md):** tokenization, attention, the Transformer, pretraining/finetuning/generation.
 * **[Part III — Reinforcement learning](book/README.md):** the agent–environment loop, policy gradients (REINFORCE, Actor-Critic, PPO), and Deep Q-Learning.
+* **[Part IV — Diffusion](book/README.md):** generation by denoising — the forward/reverse processes and the predict-the-noise loss, a 2-D toy, and a convolutional U-Net that denoises MNIST.
 
 Each chapter links to the exact source files it explains. Start at [`book/README.md`](book/README.md).
 
@@ -68,8 +69,9 @@ Runnable, commented examples, from a two-line regression to a working language m
 
 1. **[BabyGPT — a tiny LLM](tutorials/llm/README.md)**: pretrain a decoder-only Transformer on Shakespeare, finetune it on nursery rhymes, and generate text. The flagship tutorial.
 2. **[Reinforcement learning](tutorials/rl/README.md)**: train agents to solve a GridWorld maze and play Snake with REINFORCE, Actor-Critic, DQN and PPO — the same networks, a very different kind of learning.
-3. **[Regression](tutorials/regression/README.md)**: fit a noisy line/curve with a small MLP.
-4. **Classification**: [binary](tutorials/classification/binary_classification/README.md), [multi-class](tutorials/classification/multi-class_classification/simple_multi-class_classification/README.md), and [MNIST digits with linear or convolutional models](tutorials/classification/multi-class_classification/mnist_digits_classification/README.md).
+3. **[Diffusion](tutorials/diffusion/README.md)**: generate by denoising — learn a 2-D distribution with an MLP, then denoise MNIST digits with a tiny convolutional U-Net.
+4. **[Regression](tutorials/regression/README.md)**: fit a noisy line/curve with a small MLP.
+5. **Classification**: [binary](tutorials/classification/binary_classification/README.md), [multi-class](tutorials/classification/multi-class_classification/simple_multi-class_classification/README.md), and [MNIST digits with linear or convolutional models](tutorials/classification/multi-class_classification/mnist_digits_classification/README.md).
 
 ## Features
 

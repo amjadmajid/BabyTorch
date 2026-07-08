@@ -92,6 +92,20 @@ PyTorch agents from
 [deep-reinforcement-learning-games-from-scratch](https://github.com/amjadmajid/deep-reinforcement-learning-games-from-scratch)
 onto BabyTorch — nearly a rename, because BabyTorch mirrors PyTorch.
 
+## Part IV — Diffusion
+
+*A different way to generate: not one token at a time, but by starting from
+pure noise and cleaning it up into a sample.*
+
+| Chapter | What you will understand |
+|---------|--------------------------|
+| [12. Diffusion](12-diffusion.md) | Generation by denoising: the fixed forward process that destroys data in closed form, the predict-the-noise training loss, and the reverse process that samples from noise — shown on a 2-D distribution with a plain MLP. |
+| [13. Image diffusion](13-image-diffusion.md) | The same recipe on images: a tiny convolutional U-Net, with `Upsample` (the one new op) and *additive* skip connections and time conditioning, trained to denoise MNIST. |
+
+Part IV has a companion too: the [diffusion
+tutorial](../tutorials/diffusion/README.md) trains both models — the 2-D toy
+and the MNIST U-Net — with the exact code these chapters explain.
+
 ## The map of the code
 
 Everything the book covers lives in these files:
@@ -128,6 +142,11 @@ tutorials/rl/
 ├── ppo.py                ch. 10  PPO
 ├── dqn.py                ch. 11  Deep Q-Network
 └── snake.py, snake_dqn.py   ch. 11  Snake, with an MLP or a ConvNet
+
+tutorials/diffusion/
+├── common.py            ch. 12  NoiseSchedule, q_sample, train_step, sampling
+├── toy_diffusion.py     ch. 12  the 2-D toy DDPM (an MLP denoiser)
+└── mnist_diffusion.py   ch. 13  the MNIST U-Net (Conv2D + MaxPool2D + Upsample)
 ```
 
 A fair warning about what "baby" means: BabyTorch chooses the readable

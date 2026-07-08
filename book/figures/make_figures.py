@@ -917,6 +917,126 @@ def fig_dqn():
 
 
 # ---------------------------------------------------------------------------
+# Part IV — diffusion
+# ---------------------------------------------------------------------------
+
+def mix(c1, c2, a):
+    """Linearly blend two #rrggbb colors (a=0 -> c1, a=1 -> c2)."""
+    def parts(c):
+        return [int(c[i:i + 2], 16) for i in (1, 3, 5)]
+    p, q = parts(c1), parts(c2)
+    r, g, bl = (round(p[i] + (q[i] - p[i]) * a) for i in range(3))
+    return f"#{r:02x}{g:02x}{bl:02x}"
+
+
+def fig_diffusion():
+    import random
+    rng = random.Random(7)
+    W, H = 880, 392
+    b = [title_block("Diffusion: wreck the data with noise, then learn to undo it",
+                     "the forward process is fixed arithmetic — no network; the reverse process is the denoiser we train")]
+
+    xs = [110, 248, 386, 524, 662, 800]
+    tile = 82
+    ytop = 132
+    yc = ytop + tile / 2
+    labels = ["x₀", "x₁", "x₂", "⋯", "xₜ", "x_T"]
+    for i, cx in enumerate(xs):
+        a = i / (len(xs) - 1)
+        fill = mix(BLUE[0], GRAY[0], a)
+        stroke = mix(BLUE[1], "#9a9990", a)
+        b.append(rect(cx - tile / 2, ytop, tile, tile, fill, stroke, rx=10, sw=1.6))
+        for _ in range(int((a ** 1.3) * 95)):                 # speckle: more noise to the right
+            px = cx - tile / 2 + 6 + rng.random() * (tile - 12)
+            py = ytop + 6 + rng.random() * (tile - 12)
+            b.append(f"<circle cx='{px:.1f}' cy='{py:.1f}' r='1.5' fill='{INK2}' opacity='0.5'/>")
+        b.append(text(cx, ytop + tile + 20, labels[i], 13, INK, "600"))
+    b.append(text(xs[0], ytop + tile + 37, "a clean sample", 10, MUTED))
+    b.append(text(xs[-1], ytop + tile + 37, "pure noise  N(0, I)", 10, MUTED))
+    for i in range(len(xs) - 1):                              # chain connectors
+        b.append(line(xs[i] + tile / 2, yc, xs[i + 1] - tile / 2, yc,
+                      stroke=GRAY[1], sw=1.2, marker=False))
+
+    fy = ytop - 34                                            # forward arrow, left -> right
+    b.append(path(f"M {xs[0]} {fy} L {xs[-1]} {fy}", stroke=RED[1], sw=1.8,
+                  marker=True, marker_id="arr-red"))
+    b.append(text((xs[0] + xs[-1]) / 2, fy - 8,
+                  "forward  q(xₜ | xₜ₋₁):  add a little Gaussian noise, T times  (fixed — no network)",
+                  11, RED[1]))
+
+    ry = ytop + tile + 60                                     # reverse arrow, right -> left
+    b.append(path(f"M {xs[-1]} {ry} L {xs[0]} {ry}", stroke=BLUE[1], sw=1.8,
+                  marker=True, marker_id="arr-blue"))
+    b.append(text((xs[0] + xs[-1]) / 2, ry + 18,
+                  "reverse  pθ(xₜ₋₁ | xₜ):  a network predicts the noise and subtracts one step  (this we train)",
+                  11, BLUE[1]))
+
+    b.append(text(W / 2, H - 30,
+                  "Closed form — jump straight to any step:   xₜ = √(ᾱₜ)·x₀ + √(1−ᾱₜ)·ε,   ε ~ N(0, I)   "
+                  "(ᾱₜ = the signal still surviving at step t)", 11, INK2))
+    save("fig-diffusion.svg", svg(W, H, "\n".join(b)))
+
+
+def fig_unet():
+    W, H = 880, 540
+    b = [title_block("A U-Net denoiser: pool down for context, upsample back for detail",
+                     "additive skips restore what pooling throws away, and the timestep is added into every block — so no concat op is ever needed")]
+
+    xL, xR = 190, 610
+    xM = (xL + xR) / 2
+    w, h = 156, 46
+    yIn, yE0, yE1, yB = 100, 168, 260, 352
+
+    def cen(top):
+        return top + h / 2
+
+    # encoder (left, descending)
+    b.append(block(xL, yIn, w, h, BLUE, "noised image", "1 channel · 28×28", 12.5, 10))
+    b.append(block(xL, yE0, w, h, AQUA, "ConvBlock", "C channels · 28×28", 12.5, 10))
+    b.append(block(xL, yE1, w, h, AQUA, "ConvBlock", "2C channels · 14×14", 12.5, 10))
+    b.append(line(xL, yIn + h, xL, yE0, marker=True))
+    b.append(line(xL, yE0 + h, xL, yE1, marker=True))
+    b.append(text(xL - 8, (yE0 + h + yE1) / 2 + 4, "MaxPool ↓2", 9.5, MUTED, anchor="end"))
+    b.append(path(f"M {xL} {yE1 + h} L {xL} {cen(yB)} L {xM - w / 2} {cen(yB)}", marker=True))
+    b.append(text(xL - 8, yE1 + h + 22, "MaxPool ↓2", 9.5, MUTED, anchor="end"))
+
+    # bottleneck (center-bottom)
+    b.append(block(xM, yB, w, h, ORANGE, "bottleneck", "2C channels · 7×7", 12.5, 10))
+
+    # decoder (right, ascending)
+    b.append(block(xR, yE1, w, h, AQUA, "ConvBlock", "2C channels · 14×14", 12.5, 10))
+    b.append(block(xR, yE0, w, h, AQUA, "ConvBlock", "C channels · 28×28", 12.5, 10))
+    b.append(block(xR, yIn, w, h, YELLOW, "output conv", "→ 1 channel · 28×28", 12.5, 10))
+    b.append(path(f"M {xM + w / 2} {cen(yB)} L {xR} {cen(yB)} L {xR} {yE1 + h}", marker=True))
+    b.append(text(xR + 10, yE1 + h + 22, "Upsample ↑2", 9.5, MUTED, anchor="start"))
+    b.append(line(xR, yE1, xR, yE0 + h, marker=True))
+    b.append(text(xR + 10, (yE0 + h + yE1) / 2 + 4, "Upsample ↑2", 9.5, MUTED, anchor="start"))
+    b.append(line(xR, yE0, xR, yIn + h, marker=True))
+    b.append(text(xR + 86, cen(yIn) + 4, "εθ(xₜ, t)", 11.5, INK, "600", anchor="start"))
+
+    # additive skip connections (dashed, horizontal), each ending in a ⊕
+    for top, res in [(yE0, "28×28"), (yE1, "14×14")]:
+        y = cen(top)
+        b.append(path(f"M {xL + w / 2} {y} L {xR - w / 2 - 18} {y}",
+                      stroke=GRAY[1], sw=1.5, dash="6 4", marker=False))
+        b.append(plus(xR - w / 2 - 6, y, r=11))
+        b.append(text(xM, y - 15, f"add skip · {res}", 10, INK2))
+
+    # time conditioning
+    ty = 460
+    b.append(block(xM, ty, 320, 40, VIOLET,
+                   "timestep t  →  sinusoidal embedding  →  MLP", None, 11.5))
+    b.append(text(xM, ty - 10, "added as a per-channel bias into every block", 10, MUTED))
+    b.append(path(f"M {xM} {ty} L {xM} {yB + h + 2}", stroke=VIOLET[1], sw=1.4,
+                  dash="4 3", marker=False))
+
+    b.append(legend(40, H - 24, [(BLUE, "image"), (AQUA, "conv block"),
+                                 (ORANGE, "bottleneck"), (VIOLET, "time"),
+                                 (YELLOW, "output"), (GRAY, "skip / pool")]))
+    save("fig-unet.svg", svg(W, H, "\n".join(b)))
+
+
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     fig_babygpt()
@@ -931,3 +1051,5 @@ if __name__ == "__main__":
     fig_rl_loop()
     fig_policy_gradient()
     fig_dqn()
+    fig_diffusion()
+    fig_unet()

@@ -6,4 +6,5 @@
 5. [x] Implement a few reinforcement learning algorithms (tabular DP/TD plus REINFORCE, Actor-Critic, DQN, PPO on GridWorld + Snake — see `tutorials/rl/` and book Part III, chapters 9–11)
 6. [x] Add a KV cache to BabyGPT's `generate` so inference doesn't recompute past positions (on by default; `generate.py --no_cache` shows the difference)
 7. [x] Add an attention-visualization example: `tutorials/llm/attention_viz.py` plots trained heads' (T, T) weights as heatmaps
-8. [ ] Apple-Silicon GPU backend via MLX, as a third library behind the `xp` proxy (macOS currently runs on the CPU; MLX's API differs from NumPy in places — scatter-add, random, dtypes — so this needs real porting and testing on a Mac)
+8. [x] Add diffusion models (Part IV): a 2-D toy DDPM and an MNIST U-Net on shared machinery (`tutorials/diffusion/`), with the one new op `nn.Upsample` and book chapters 12–13
+9. [ ] Apple-Silicon GPU backend via MLX, as a third library behind the `xp` proxy (macOS currently runs on the CPU; MLX's API differs from NumPy in places — scatter-add, random, dtypes — so this needs real porting and testing on a Mac)
