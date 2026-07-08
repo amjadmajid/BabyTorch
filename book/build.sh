@@ -29,7 +29,8 @@ if [ "$lang" = "ar" ]; then
   "$PY" "$here/htmlpdf.py" "$here/ar" "$build/book-ar.pdf" --rtl \
     --title "BabyTorch" \
     --subtitle "كيف تعمل أُطُر التعلّم العميق — وكيف يُبنى نموذج GPT" \
-    --author "أمجد ماجد"
+    --author "د. امجد يوسف مجيد" \
+    --email "amjad@slimx.ai"
   exit 0
 fi
 

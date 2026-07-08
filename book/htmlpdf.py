@@ -89,6 +89,8 @@ blockquote {{ border-inline-start:3px solid #ddd; margin-inline-start:0;
 .title-page h1 {{ page-break-before: avoid; font-size:2.6rem; border:none; }}
 .title-page .sub {{ color:#555; font-size:1.1rem; margin-top:0.5em; }}
 .title-page .author {{ margin-top:2em; font-size:1.1rem; }}
+.title-page .email {{ margin-top:0.3em; font-size:0.95rem; color:#666;
+                      direction:ltr; }}
 """
 
 
@@ -100,6 +102,7 @@ def main():
     ap.add_argument("--title", default="BabyTorch")
     ap.add_argument("--subtitle", default="")
     ap.add_argument("--author", default="")
+    ap.add_argument("--email", default="")
     args = ap.parse_args()
 
     chapters = sorted(f for f in os.listdir(args.srcdir)
@@ -109,7 +112,8 @@ def main():
 
     parts = [f'<div class="title-page"><h1>{args.title}</h1>'
              f'<div class="sub">{args.subtitle}</div>'
-             f'<div class="author">{args.author}</div></div>']
+             f'<div class="author">{args.author}</div>'
+             f'<div class="email">{args.email}</div></div>']
     for name in chapters:
         with open(os.path.join(args.srcdir, name), encoding="utf-8") as f:
             text = f.read()

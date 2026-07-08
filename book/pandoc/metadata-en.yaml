@@ -1,7 +1,9 @@
 ---
 title: "BabyTorch"
 subtitle: "How deep learning frameworks work — and how a GPT is built — explained through a codebase small enough to actually read"
-author: "Amjad Majid"
+author:
+  - "Dr. Amjad Yousef Majid"
+  - "amjad@slimx.ai"
 lang: en
 documentclass: report
 fontsize: 11pt
