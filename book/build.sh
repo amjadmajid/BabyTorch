@@ -30,11 +30,11 @@ case "$lang" in
     # xelatex (TeX Live) finds the Arabic font in ~/Library/Fonts and drives
     # polyglossia RTL fine; we avoid pandoc's babel path via preamble-ar.tex.
     engine="xelatex"
-    # RTL preamble (polyglossia). NOTE: the ltr-code.lua filter (to keep code
-    # left-to-right) is temporarily disabled — its \LR wrapping clashes with
-    # polyglossia+unicode-math and aborts the build. Consequence: code blocks
-    # currently render RTL-reversed in book-ar.pdf. See ltr-code.lua. TODO.
-    extra="--include-in-header $here/pandoc/preamble-ar.tex"
+    # RTL preamble (polyglossia) + keep code left-to-right via polyglossia's
+    # english switch (see ltr-code.lua). --no-highlight: the syntax
+    # highlighting Shaded/Highlighting boxes clash with polyglossia RTL, so
+    # Arabic code is plain (uncolored) monospace; the English PDF keeps colors.
+    extra="--include-in-header $here/pandoc/preamble-ar.tex --lua-filter $here/pandoc/ltr-code.lua --no-highlight"
     ;;
   *)
     echo "usage: $0 en|ar" >&2
