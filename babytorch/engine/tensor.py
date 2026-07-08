@@ -352,6 +352,10 @@ class Tensor:
         op = MaxPool2DOperation(kernel_size, stride, padding)
         return self._make_output(op, op.forward(self), self.requires_grad, "maxpool2d")
 
+    def upsample(self, scale=2):
+        op = UpsampleOperation(scale)
+        return self._make_output(op, op.forward(self), self.requires_grad, "upsample")
+
     # ------------------------------------------------------------------
     # Backpropagation
     # ------------------------------------------------------------------

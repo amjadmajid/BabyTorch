@@ -363,6 +363,26 @@ class MaxPool2D(Module):
                 f"stride={self.stride}, padding={self.padding})")
 
 
+class Upsample(Module):
+    """Nearest-neighbour upsampling: grow an image by an integer factor.
+
+    The counterpart to :class:`MaxPool2D`.  Pooling halves an image by
+    keeping one value per window; ``Upsample(scale=2)`` doubles it by
+    copying each pixel into a ``scale x scale`` block.  A convolutional
+    U-Net alternates the two -- pool down to a small, abstract picture,
+    then upsample back up to full resolution.  It has no parameters.
+    """
+
+    def __init__(self, scale=2):
+        self.scale = scale
+
+    def forward(self, x):
+        return x.upsample(self.scale)
+
+    def __repr__(self):
+        return f"Upsample(scale={self.scale})"
+
+
 class Flatten(Module):
     """Flatten everything except the batch dimension."""
 

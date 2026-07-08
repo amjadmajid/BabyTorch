@@ -728,5 +728,37 @@ class MaxPool2DOperation(Operation):
         return grad_padded,
 
 
+class UpsampleOperation(Operation):
+    """Nearest-neighbour 2D upsampling: copy each pixel into a ``scale x
+    scale`` block, turning ``(N, C, H, W)`` into ``(N, C, H*scale, W*scale)``.
+
+    It is the mirror image of pooling.  Max-pool *shrinks* an image by
+    keeping one value per window; this *grows* it by copying one value into
+    a whole window.  A U-Net's decoder uses it to climb back up to full
+    resolution after the encoder has shrunk the picture down.
+
+    Backward: each input pixel was copied into ``scale**2`` output
+    positions, so by the chain rule its gradient is the *sum* of the
+    gradients over that block -- a sum-pool, the exact adjoint of a copy.
+    """
+
+    def __init__(self, scale):
+        self.scale = scale
+
+    def forward(self, a):
+        self.a = a
+        s = self.scale
+        # Repeat along height, then width, so each pixel becomes an s x s
+        # block: out[.., h*s + i, w*s + j] = in[.., h, w] for all i, j < s.
+        return xp.repeat(xp.repeat(a.data, s, axis=2), s, axis=3)
+
+    def backward(self, grad):
+        s = self.scale
+        N, C, H, W = self.a.shape
+        # Regroup each s x s output block (H*s -> (H, s), W*s -> (W, s)) and
+        # sum it back onto the single source pixel it was copied from.
+        return grad.reshape(N, C, H, s, W, s).sum(axis=(3, 5)),
+
+
 # Backwards-compatible alias (the original class name had a typo).
 RLeUOperation = ReLUOperation

@@ -7,6 +7,7 @@ from .nn import (
     Dropout,
     Conv2D,
     MaxPool2D,
+    Upsample,
     Flatten,
     ReLU,
     Tanh,
