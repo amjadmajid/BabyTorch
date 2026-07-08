@@ -193,11 +193,22 @@ The shape story, line by line:
 | `att @ v` | `(B, nh, T, hs)` | what each position read, per head |
 | `y` | `(B, T, C)` | heads concatenated, projected — ready for the next layer |
 
-Two small notes on the code. The `qkv` layer computes all three
+Three small notes on the code. The `qkv` layer computes all three
 projections as one `Linear(C, 3C)` — one matmul instead of three,
-identical math. And `self.mask` is created once, from `xp.triu`, as a
+identical math. `self.mask` is created once, from `xp.triu`, as a
 plain constant tensor (`requires_grad=False`): the mask is a rule of
-the game, not something to learn.
+the game, not something to learn. And the file's real `forward` takes
+one extra, optional argument — a `kv_cache`, used only during
+generation (chapter 8 explains what it buys). With a cache the `T`
+queries sit *after* earlier, cached positions, so the file slices the
+mask as `mask[T_total - T:T_total, :T_total]` — equal to the
+`mask[:T, :T]` above whenever nothing is cached, as in training.
+
+These weight tables are not an abstraction, either:
+[`attention_viz.py`](../tutorials/llm/attention_viz.py) sets the
+file's `store_attention` flag, forwards a prompt, and draws each
+head's `(T, T)` table as a heatmap — worth a look once chapter 8 has
+given you a trained model.
 
 ## The punchline
 

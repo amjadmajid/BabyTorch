@@ -63,7 +63,16 @@ class CausalSelfAttention(nn.Module):
         mask = xp.triu(xp.full((block_size, block_size), -1e9), k=1)
         self.mask = Tensor(mask)  # not a parameter: requires_grad is False
 
-    def forward(self, x):
+        # Purely for inspection (see tutorials/llm/attention_viz.py): set
+        # store_attention = True and forward() will keep its most recent
+        # post-softmax weights, so you can *look at* what a head attends to.
+        self.store_attention = False
+        self.last_attention = None
+
+    def forward(self, x, kv_cache=None):
+        """x: (B, T, C).  With a ``kv_cache`` (generation only -- see
+        ``GPT.generate``), ``x`` holds just the newest token(s); the keys
+        and values of every earlier position come from the cache."""
         B, T, C = x.shape
 
         # Project to queries, keys, values, then split: each is (B, T, C).
@@ -78,15 +87,31 @@ class CausalSelfAttention(nn.Module):
         k = k.reshape(B, T, self.n_head, self.head_size).transpose((0, 2, 1, 3))
         v = v.reshape(B, T, self.n_head, self.head_size).transpose((0, 2, 1, 3))
 
+        # KV cache: put the keys/values remembered from earlier calls in
+        # front of this call's, then remember the extended arrays for the
+        # next call.  Pure inference bookkeeping on raw arrays -- no
+        # gradients flow through the cache.
+        if kv_cache is not None:
+            if kv_cache["k"] is not None:
+                k = Tensor(xp.concatenate([kv_cache["k"], k.data], axis=2))
+                v = Tensor(xp.concatenate([kv_cache["v"], v.data], axis=2))
+            kv_cache["k"], kv_cache["v"] = k.data, v.data
+
         # Attention scores: how much should query i attend to key j?
-        # (B, nh, T, hs) @ (B, nh, hs, T) -> (B, nh, T, T)
+        # (B, nh, T, hs) @ (B, nh, hs, T_total) -> (B, nh, T, T_total)
         # Scale by 1/sqrt(head_size) so the scores don't grow with head_size
         # (large scores would make softmax nearly one-hot and kill gradients).
         att = (q @ k.transpose((0, 1, 3, 2))) * (1.0 / math.sqrt(self.head_size))
 
         # Forbid attending to the future, then normalize into probabilities.
-        att = att + self.mask[:T, :T]
+        # The T queries sit at the *last* T of the T_total key positions, so
+        # take the matching rows of the mask.  Without a cache T_total == T
+        # and this is simply mask[:T, :T].
+        T_total = k.shape[2]
+        att = att + self.mask[T_total - T:T_total, :T_total]
         att = att.softmax(axis=-1)
+        if self.store_attention:
+            self.last_attention = att.data    # (B, n_head, T, T_total)
         att = self.attn_dropout(att)
 
         # Use the weights to read a mix of values, then reassemble the heads.
@@ -133,9 +158,9 @@ class Block(nn.Module):
         self.ln2 = nn.LayerNorm(n_embd)
         self.mlp = MLP(n_embd, dropout)
 
-    def forward(self, x):
-        x = x + self.attn(self.ln1(x))   # communicate
-        x = x + self.mlp(self.ln2(x))    # compute
+    def forward(self, x, kv_cache=None):
+        x = x + self.attn(self.ln1(x), kv_cache)   # communicate
+        x = x + self.mlp(self.ln2(x))              # compute
         return x
 
 
@@ -166,23 +191,34 @@ class GPT(nn.Module):
         self.ln_f = nn.LayerNorm(n_embd)
         self.head = nn.Linear(n_embd, vocab_size)
 
-    def forward(self, idx):
-        """idx: integer array (B, T) of token ids -> logits (B, T, vocab_size)."""
+    def forward(self, idx, kv_caches=None):
+        """idx: integer array (B, T) of token ids -> logits (B, T, vocab_size).
+
+        ``kv_caches`` (generation only): one cache per block, carrying the
+        keys/values of already-processed positions, so ``idx`` needs to
+        hold only the tokens that come after them.  See ``generate``.
+        """
         if isinstance(idx, Tensor):
             idx = idx.data
         idx = xp.asarray(idx).astype(xp.int64)
         B, T = idx.shape
-        assert T <= self.block_size, (
-            f"sequence length {T} exceeds block size {self.block_size}")
 
-        tok = self.token_embedding(idx)                 # (B, T, C)
-        pos = self.position_embedding(xp.arange(T))     # (T, C)
-        x = self.drop(tok + pos)                        # broadcast add
+        # With a cache, this call's tokens sit *after* the cached positions,
+        # so their position ids start where the cache ends.
+        past = 0
+        if kv_caches is not None and kv_caches[0]["k"] is not None:
+            past = kv_caches[0]["k"].shape[2]
+        assert past + T <= self.block_size, (
+            f"sequence length {past + T} exceeds block size {self.block_size}")
 
-        for block in self.blocks:
-            x = block(x)
+        tok = self.token_embedding(idx)                       # (B, T, C)
+        pos = self.position_embedding(xp.arange(past, past + T))  # (T, C)
+        x = self.drop(tok + pos)                              # broadcast add
+
+        for i, block in enumerate(self.blocks):
+            x = block(x, kv_caches[i] if kv_caches is not None else None)
         x = self.ln_f(x)
-        return self.head(x)                             # (B, T, vocab_size)
+        return self.head(x)                                   # (B, T, vocab_size)
 
     def loss(self, idx, targets):
         """Cross-entropy between predictions and the shifted targets.
@@ -199,7 +235,12 @@ class GPT(nn.Module):
         targets = xp.asarray(targets).astype(xp.int64).reshape(B * T)
         return nn.CrossEntropyLoss()(logits, targets)
 
-    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
+    def empty_kv_caches(self):
+        """A fresh key/value cache per block, for ``generate``'s fast path."""
+        return [{"k": None, "v": None} for _ in self.blocks]
+
+    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None,
+                 use_cache=True):
         """Autoregressively extend ``idx`` by ``max_new_tokens`` tokens.
 
         The loop is the essence of "inference" in a language model:
@@ -213,18 +254,43 @@ class GPT(nn.Module):
           more random/creative.
         * ``top_k`` restricts sampling to the k most likely tokens, which
           cuts off the unlikely "tail" and keeps output coherent.
+        * ``use_cache`` enables the KV cache.  Naively, lap t re-runs the
+          whole t-token context just to read one new row of logits.  The
+          cache keeps every block's keys and values, so after the first
+          lap the model forwards *only the newest token* and attends to
+          the stored past: the same logits for a fraction of the work.
         """
         idx = xp.asarray(idx).astype(xp.int64)
         if idx.ndim == 1:
             idx = idx[None, :]
 
         self.eval()
+        caches = self.empty_kv_caches() if use_cache else None
         with babytorch.no_grad():
             for _ in range(max_new_tokens):
-                # Never feed more than block_size tokens of context.
+                # Never use more than block_size tokens of context.
                 idx_cond = idx[:, -self.block_size:]
-                logits = self.forward(idx_cond).data      # (B, T, vocab)
-                logits = logits[:, -1, :] / temperature   # last step: (B, vocab)
+
+                if caches is None:
+                    # No cache: forward the whole context, every lap.
+                    logits = self.forward(idx_cond).data
+                elif caches[0]["k"] is None:
+                    # First lap ("prefill"): run the whole prompt once and
+                    # let every block store its keys and values.
+                    logits = self.forward(idx_cond, caches).data
+                elif caches[0]["k"].shape[2] < self.block_size:
+                    # Steady state: the past is cached -- forward only the
+                    # token sampled on the previous lap.
+                    logits = self.forward(idx[:, -1:], caches).data
+                else:
+                    # The context window is full and now slides one step
+                    # per token.  Our position embeddings are absolute, so
+                    # every cached key belongs to a position id that just
+                    # shifted -- the cache is stale; rebuild it.
+                    caches = self.empty_kv_caches()
+                    logits = self.forward(idx_cond, caches).data
+
+                logits = logits[:, -1, :] / temperature   # last position: (B, vocab)
 
                 if top_k is not None:
                     k = min(top_k, logits.shape[-1])

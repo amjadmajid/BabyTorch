@@ -100,24 +100,39 @@ in parallel.
 <summary><b>How it's implemented</b> — <code>tutorials/llm/model.py</code> (the forward pass, unabridged)</summary>
 
 ```python
-    def forward(self, idx):
-        """idx: integer array (B, T) of token ids -> logits (B, T, vocab_size)."""
+    def forward(self, idx, kv_caches=None):
+        """idx: integer array (B, T) of token ids -> logits (B, T, vocab_size).
+
+        ``kv_caches`` (generation only): one cache per block, carrying the
+        keys/values of already-processed positions, so ``idx`` needs to
+        hold only the tokens that come after them.  See ``generate``.
+        """
         if isinstance(idx, Tensor):
             idx = idx.data
         idx = xp.asarray(idx).astype(xp.int64)
         B, T = idx.shape
-        assert T <= self.block_size, (
-            f"sequence length {T} exceeds block size {self.block_size}")
 
-        tok = self.token_embedding(idx)                 # (B, T, C)
-        pos = self.position_embedding(xp.arange(T))     # (T, C)
-        x = self.drop(tok + pos)                        # broadcast add
+        # With a cache, this call's tokens sit *after* the cached positions,
+        # so their position ids start where the cache ends.
+        past = 0
+        if kv_caches is not None and kv_caches[0]["k"] is not None:
+            past = kv_caches[0]["k"].shape[2]
+        assert past + T <= self.block_size, (
+            f"sequence length {past + T} exceeds block size {self.block_size}")
 
-        for block in self.blocks:
-            x = block(x)
+        tok = self.token_embedding(idx)                       # (B, T, C)
+        pos = self.position_embedding(xp.arange(past, past + T))  # (T, C)
+        x = self.drop(tok + pos)                              # broadcast add
+
+        for i, block in enumerate(self.blocks):
+            x = block(x, kv_caches[i] if kv_caches is not None else None)
         x = self.ln_f(x)
-        return self.head(x)                             # (B, T, vocab_size)
+        return self.head(x)                                   # (B, T, vocab_size)
 ```
+
+(`kv_caches` is generation's KV cache — a speed trick, not architecture.
+Ignore it on a first read: with no cache, `past` is 0 and this is exactly
+the walkthrough above. Chapter 8 explains what the cache buys.)
 
 </details>
 

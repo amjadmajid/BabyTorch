@@ -11,5 +11,6 @@ mnist_data/
 *.model
 checkpoints/
 tutorials/llm/data/
+tutorials/llm/*.png
 graphs/
 .pytest_cache/
