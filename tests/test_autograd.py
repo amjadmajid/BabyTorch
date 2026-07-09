@@ -185,6 +185,49 @@ def test_squeeze_unsqueeze():
     check_gradient(lambda x: (x.unsqueeze(1) ** 2).sum(), np.random.randn(3, 4))
 
 
+def test_squeeze():
+    # squeeze()'s only other check (test_pytorch_parity.py) is skipped
+    # unless torch happens to be installed -- this one always runs.
+    check_gradient(lambda x: (x.squeeze() ** 2).sum(), np.random.randn(3, 1, 4))
+
+
+def test_flatten():
+    # Used by nn.Flatten (the classifier head on a CNN) but previously had
+    # no gradient check of any kind.
+    check_gradient(lambda x: (x.flatten() ** 2).sum(), np.random.randn(3, 4, 5))
+
+
+# ---------------------------------------------------------------------------
+# Convolution & pooling
+# ---------------------------------------------------------------------------
+# Conv2D has two differentiable operands (input and kernel), so -- exactly
+# like the matmul tests above -- each gets its own check with the other
+# operand held fixed.
+
+def test_conv2d_gradient_wrt_input():
+    w = np.random.randn(2, 3, 3, 3)  # 2 filters, 3 in-channels, 3x3 kernel
+    check_gradient(
+        lambda x: x.conv2d(Tensor(w, dtype=babytorch.xp.float64),
+                           stride=1, padding=1).sum(),
+        np.random.randn(1, 3, 5, 5))
+
+
+def test_conv2d_gradient_wrt_kernel():
+    x = np.random.randn(1, 3, 5, 5)
+    check_gradient(
+        lambda w: Tensor(x, dtype=babytorch.xp.float64).conv2d(
+            w, stride=1, padding=1).sum(),
+        np.random.randn(2, 3, 3, 3))
+
+
+def test_maxpool2d_gradient():
+    # Continuous random inputs make an exact tie between two elements in
+    # the same window vanishingly unlikely -- same reasoning as
+    # test_max_all/test_max_axis above, just per pooling window.
+    check_gradient(lambda x: x.maxpool2d(kernel_size=2, stride=2).sum(),
+                   np.random.randn(1, 2, 4, 4))
+
+
 # ---------------------------------------------------------------------------
 # Composed expressions
 # ---------------------------------------------------------------------------

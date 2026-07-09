@@ -36,13 +36,16 @@ z = babytorch.zeros(2, 3)         # all zeros
 o = babytorch.ones(2, 3)          # all ones
 r = babytorch.randn(2, 3)         # random, normal distribution (mean 0, std 1)
 u = babytorch.rand(2, 3)          # random, uniform in [0, 1)
-n = babytorch.arange(0, 10, 2)    # 0, 2, 4, 6, 8
+n = babytorch.arange(0, 10, 2)    # 0., 2., 4., 6., 8.
 
 babytorch.manual_seed(42)         # make the random ones reproducible
 ```
 
 Elements are `float32` by default, exactly like PyTorch — deep learning
-rarely needs more precision, and smaller numbers mean faster math.
+rarely needs more precision, and smaller numbers mean faster math. (One
+spot this is *more* consistent than PyTorch: `torch.arange(0, 10, 2)`
+keeps an integer dtype because its arguments are integers, while
+`babytorch.arange` always returns `float32`, like every factory above.)
 
 **Try it**
 
@@ -64,9 +67,9 @@ rarely needs more precision, and smaller numbers mean faster math.
 The block of numbers can be reorganized without copying anything:
 
 ```python
-x = babytorch.arange(6)      # shape (6,):    [0 1 2 3 4 5]
-x.reshape(2, 3)              # shape (2, 3):  [[0 1 2] [3 4 5]]
-x.reshape(3, 2)              # shape (3, 2):  [[0 1] [2 3] [4 5]]
+x = babytorch.arange(6)      # shape (6,):    [0. 1. 2. 3. 4. 5.]
+x.reshape(2, 3)              # shape (2, 3):  [[0. 1. 2.] [3. 4. 5.]]
+x.reshape(3, 2)              # shape (3, 2):  [[0. 1.] [2. 3.] [4. 5.]]
 
 m = babytorch.randn(2, 3)
 m.T                          # transpose: shape (3, 2), rows <-> columns
@@ -167,7 +170,9 @@ the environment:
 'cpu'
 >>> babytorch.device()
 'cpu'
+>>> t = babytorch.tensor([1., 2., 3.])
 >>> t.numpy()    # copy back to a NumPy array on the CPU (for plotting, saving...)
+array([1., 2., 3.], dtype=float32)
 ```
 
 ```bash

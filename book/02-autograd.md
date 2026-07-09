@@ -106,7 +106,7 @@ file has the same shape — only the local derivative changes:
 | `exp(a)` | `grad · exp(a)` (its own derivative — reuse the saved output) |
 | `relu(a)` | pass gradient where `a > 0`, zero elsewhere |
 | `sum` | broadcast the gradient back to every element |
-| `max` | route the gradient only to the winner |
+| `max` | route the gradient only to the winner (ties split it evenly) |
 | `a[idx]` | scatter the gradient back to the positions that were read |
 
 And the one worth memorizing, because Transformers are made of it —
@@ -124,13 +124,14 @@ Notice what `MulOperation` does *not* know: anything about graphs,
 `requires_grad`, or `backward()` traversal. Operations do math on raw
 arrays. All bookkeeping lives in
 [`babytorch/engine/tensor.py`](../babytorch/engine/tensor.py), where each
-Tensor method is three lines of glue:
+Tensor method is a few lines of glue:
 
 ```python
 def __mul__(self, other):
     op = MulOperation()
     result = op.forward(self, other)
-    return self._make_output(op, result, ..., "*")   # <- links the graph edge
+    grad = self.requires_grad or other.requires_grad
+    return self._make_output(op, result, grad, "*")  # <- links the graph edge
 ```
 
 *Math in `operations.py`, bookkeeping in `tensor.py`* — keep this split
@@ -318,7 +319,7 @@ testing. Every differentiable operation in BabyTorch is verified this
 way against the analytic gradient — see `check_gradient` in
 [`tests/conftest.py`](../tests/conftest.py) and the suite in
 [`tests/test_autograd.py`](../tests/test_autograd.py). When the two
-agree to five decimal places on random inputs, the calculus is right.
+agree to within `1e-4` on random inputs, the calculus is right.
 
 ## Turning the recorder off
 
