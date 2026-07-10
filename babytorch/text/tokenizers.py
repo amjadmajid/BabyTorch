@@ -10,10 +10,9 @@ Two tokenizers are provided, from simplest to most realistic:
 
 * :class:`CharTokenizer` -- one token per character.  Trivial to
   understand; the vocabulary is just the set of characters that appear.
-* :class:`BPETokenizer`  -- Byte Pair Encoding, the algorithm behind
-  GPT-2/3/4.  It starts from characters and repeatedly merges the most
-  frequent adjacent pair into a new token, so common words become single
-  tokens while rare words still break down into pieces.
+* :class:`BPETokenizer`  -- a compact, word-boundary BPE for learning the
+  merge algorithm. Production GPT tokenizers use a byte-level variant with
+  additional normalization and pre-tokenization rules.
 """
 
 import json
@@ -82,8 +81,8 @@ class BPETokenizer:
     4. Repeat 2-3 until the vocabulary reaches the target size.
 
     Each merge is remembered as a rule; encoding new text just replays the
-    rules in the order they were learned.  This is the real algorithm, kept
-    small and readable rather than fast.
+    rules in the order they were learned. This exposes the core merge
+    algorithm, kept small and readable rather than production-complete or fast.
     """
 
     def __init__(self):
@@ -105,10 +104,21 @@ class BPETokenizer:
     def _merge_pair(pair, sequences):
         """Replace every occurrence of ``pair`` with the merged symbol."""
         merged = ''.join(pair)
-        bigram = ' '.join(pair)
-        out = {}
+        out = Counter()
         for seq, freq in sequences.items():
-            out[seq.replace(bigram, merged)] = freq
+            symbols = seq.split()
+            rewritten = []
+            i = 0
+            while i < len(symbols):
+                if (i + 1 < len(symbols)
+                        and symbols[i] == pair[0]
+                        and symbols[i + 1] == pair[1]):
+                    rewritten.append(merged)
+                    i += 2
+                else:
+                    rewritten.append(symbols[i])
+                    i += 1
+            out[' '.join(rewritten)] += freq
         return out
 
     def fit(self, text, vocab_size=512, verbose=False):
@@ -118,6 +128,10 @@ class BPETokenizer:
         the model can tell where words end (and doesn't merge across
         spaces).
         """
+        if not isinstance(vocab_size, int) or isinstance(vocab_size, bool):
+            raise TypeError("vocab_size must be an integer.")
+        self.merges = {}
+
         # Represent each unique word as space-separated characters + </w>.
         words = text.split()
         sequences = Counter(' '.join(list(w) + ['</w>']) for w in words)
@@ -127,6 +141,10 @@ class BPETokenizer:
         for seq in sequences:
             base.update(seq.split())
         vocab = sorted(base)
+        if vocab_size < len(vocab):
+            raise ValueError(
+                f"vocab_size={vocab_size} is smaller than the base vocabulary "
+                f"of {len(vocab)} symbols.")
 
         while len(vocab) < vocab_size:
             pair_counts = self._get_pair_counts(sequences)
@@ -162,13 +180,25 @@ class BPETokenizer:
                     i += 1
         return symbols
 
-    def encode(self, text):
-        """Text -> list of integer ids (unknown tokens are skipped)."""
+    def encode(self, text, errors="strict"):
+        """Text -> list of ids.
+
+        Because this teaching tokenizer starts from corpus characters rather
+        than all 256 bytes, new characters may be out of vocabulary. The
+        default ``errors="strict"`` raises instead of silently deleting text;
+        pass ``errors="ignore"`` only when that loss is intentional.
+        """
+        if errors not in ("strict", "ignore"):
+            raise ValueError("errors must be 'strict' or 'ignore'.")
         ids = []
         for word in text.split():
             for tok in self._tokenize_word(word):
                 if tok in self.vocab:
                     ids.append(self.vocab[tok])
+                elif errors == "strict":
+                    raise ValueError(
+                        f"Token {tok!r} is outside this BPE vocabulary; fit on "
+                        "representative text or call encode(..., errors='ignore').")
         return ids
 
     def decode(self, ids):

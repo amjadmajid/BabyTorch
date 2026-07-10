@@ -48,3 +48,25 @@ def test_bpe_save_load(tmp_path):
     tok.save(path)
     reloaded = BPETokenizer.load(path)
     assert reloaded.encode("aaa") == tok.encode("aaa")
+
+
+def test_bpe_merge_matches_whole_symbols_not_substrings():
+    sequences = {"aa b": 2, "a b": 3}
+    merged = BPETokenizer._merge_pair(("a", "b"), sequences)
+    assert merged["aa b"] == 2
+    assert merged["ab"] == 3
+
+
+def test_bpe_refit_discards_old_merge_rules():
+    tok = BPETokenizer().fit("low low lower", vocab_size=20)
+    old_merges = dict(tok.merges)
+    tok.fit("cat cat car", vocab_size=20)
+    assert tok.merges != old_merges
+    assert tok.decode(tok.encode("cat")) == "cat"
+
+
+def test_bpe_unknown_characters_raise_instead_of_disappearing():
+    tok = BPETokenizer().fit("cat cat", vocab_size=20)
+    with pytest.raises(ValueError, match="outside this BPE vocabulary"):
+        tok.encode("cat!")
+    assert tok.decode(tok.encode("cat!", errors="ignore")) == "cat"

@@ -11,6 +11,8 @@ import numpy as np
 
 class DataLoader:
     def __init__(self, dataset, batch_size=1, shuffle=False):
+        if not isinstance(batch_size, int) or isinstance(batch_size, bool) or batch_size <= 0:
+            raise ValueError("batch_size must be a positive integer.")
         self.dataset = dataset
         self.batch_size = batch_size
         self.shuffle = shuffle

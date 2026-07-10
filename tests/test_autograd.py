@@ -13,6 +13,25 @@ from babytorch import Tensor
 from conftest import check_gradient
 
 
+def test_replaying_graph_accumulates_leaves_but_not_intermediate_scratch():
+    x = Tensor([2.0], requires_grad=True)
+    y = x * x
+    z = y * 3.0
+
+    z.backward()
+    np.testing.assert_allclose(x.grad, [12.0])
+    z.backward()
+    # Leaf gradients accumulate across calls: 12 + 12. Reusing y.grad from
+    # the first traversal would incorrectly make this 36.
+    np.testing.assert_allclose(x.grad, [24.0])
+
+
+def test_backward_rejects_a_mismatched_explicit_gradient():
+    x = Tensor([1.0, 2.0], requires_grad=True)
+    with pytest.raises(ValueError, match="gradient shape"):
+        (x * 2.0).backward([1.0])
+
+
 # ---------------------------------------------------------------------------
 # Arithmetic (with broadcasting)
 # ---------------------------------------------------------------------------

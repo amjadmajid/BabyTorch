@@ -63,6 +63,33 @@ def test_empty_params_raises():
         SGD([], learning_rate=0.1)
 
 
+def test_adam_bias_correction_starts_when_each_parameter_gets_a_gradient():
+    early = babytorch.tensor([1.0], requires_grad=True)
+    late = babytorch.tensor([1.0], requires_grad=True)
+    opt = Adam([early, late], learning_rate=0.01)
+
+    for _ in range(2):
+        early.grad = np.array([1.0], dtype=np.float32)
+        late.grad = None
+        opt.step()
+
+    late.grad = np.array([1.0], dtype=np.float32)
+    before = late.item()
+    opt.step()
+    assert abs((before - late.item()) - 0.01) < 1e-6
+
+
+@pytest.mark.parametrize("kwargs", [
+    {"betas": (-0.1, 0.999)},
+    {"betas": (0.9, 1.0)},
+    {"eps": 0.0},
+    {"weight_decay": -0.1},
+])
+def test_adam_rejects_invalid_hyperparameters(kwargs):
+    with pytest.raises(ValueError):
+        Adam(nn.Linear(1, 1).parameters(), **kwargs)
+
+
 def test_lambda_lr_scales_base():
     opt = SGD(nn.Linear(1, 1).parameters(), learning_rate=0.1)
     sched = LambdaLR(opt, lr_lambda=lambda e: 0.5 ** e)
