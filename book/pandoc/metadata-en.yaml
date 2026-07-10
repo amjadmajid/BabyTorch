@@ -1,17 +1,21 @@
 ---
-title: "BabyTorch"
-subtitle: "How deep learning frameworks work — and how a GPT is built — explained through a codebase small enough to actually read"
-author:
-  - "Dr. Amjad Yousef Majid"
-  - "amjad@slimx.ai"
 lang: en
-documentclass: report
-fontsize: 11pt
-geometry: "margin=1in"
+documentclass: book
+classoption:
+  - twoside
+  - openright
+fontsize: 10pt
+geometry:
+  - paperwidth=6in
+  - paperheight=9in
+  - inner=0.78in
+  - outer=0.62in
+  - top=0.68in
+  - bottom=0.72in
+  - bindingoffset=0.08in
 colorlinks: true
-linkcolor: RoyalBlue
-urlcolor: RoyalBlue
-toc-title: "Contents"
-mainfont: "STIX Two Text"
-monofont: "Menlo"
+linkcolor: MidnightBlue
+urlcolor: MidnightBlue
+mainfont: "Latin Modern Roman"
+monofont: "DejaVu Sans Mono"
 ---

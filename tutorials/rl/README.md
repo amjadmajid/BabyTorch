@@ -24,7 +24,7 @@ Two great families of RL, and the modern method that tops each:
 | [`reinforce.py`](reinforce.py) | Make actions that led to high returns more likely. | policy gradient |
 | [`actor_critic.py`](actor_critic.py) | Same, but a learned `V(s)` supplies a per-state baseline (the *advantage*). | policy gradient |
 | [`dqn.py`](dqn.py) | Learn `Q(s,a)` -- the value of each action -- and act greedily on it. | value-based |
-| [`ppo.py`](ppo.py) | Actor-critic with a *clipped* update, reused for several epochs. The modern workhorse (and the "PO" in RLHF). | policy gradient |
+| [`ppo.py`](ppo.py) | Actor-critic with a clipped surrogate objective, reusing each on-policy batch for several epochs. | policy gradient |
 
 The supporting cast:
 

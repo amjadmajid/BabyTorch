@@ -1,5 +1,17 @@
 # Chapter 11 — Deep Q-Learning
 
+*Part III, chapter 3 of 3. A network now approximates action values, carrying
+tabular Q-learning into large state spaces.*
+
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- construct a bootstrapped DQN target from the Bellman equation;
+- explain why replay buffers and target networks improve stability;
+- separate exploration behavior from greedy evaluation; and
+- trace the same DQN loop from vector features to image observations.
+
 Chapter 10 learned a **policy** directly: a network that maps a state to
 action probabilities. This chapter takes reinforcement learning's other
 great road. Instead of learning *how to act*, learn *what things are
@@ -175,11 +187,22 @@ prioritised replay, stacking several frames so the agent can see motion,
 and thousands of parallel actors. But the ideas are the ones in these
 chapters.
 
-And they close a loop with Part II. The "PO" in the RLHF that turns a raw
-language model into a helpful assistant is the **PPO** of chapter 10: the
-policy is the LLM, an action is the next token, and the reward comes from
-a model trained on human preferences. The Transformer you built and the
-agent you just trained are the same machine, pointed at different games.
+They also close a loop with Part II. Some influential RLHF systems used the
+**PPO** of Chapter 10: the policy is the language model, an action is a token,
+and a preference model supplies a reward. Modern post-training also includes
+other policy optimizers and objectives that learn directly from preference
+pairs. The durable connection is broader: the Transformer you built can be a
+policy, and the optimization signal can come from rewards rather than only
+next-token labels.
+
+## Key takeaways
+
+- DQN turns Q-learning into supervised regression against a moving,
+  bootstrapped target.
+- Replay decorrelates updates and reuses experience; a lagged target network
+  slows feedback between predictions and targets.
+- The neural input encoder can change from an MLP to a ConvNet without changing
+  the Bellman target or optimizer loop.
 
 ## Exercises
 

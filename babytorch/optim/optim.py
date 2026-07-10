@@ -62,6 +62,8 @@ class SGD(Optimizer):
 
     def __init__(self, params, learning_rate=0.001, momentum=0.0, weight_decay=0.0):
         super().__init__(params, learning_rate)
+        if not 0.0 <= momentum < 1.0:
+            raise ValueError("Momentum must be in [0, 1).")
         if weight_decay < 0:
             raise ValueError("Weight decay cannot be negative.")
         self.momentum = momentum
@@ -106,17 +108,26 @@ class Adam(Optimizer):
                  eps=1e-8, weight_decay=0.0):
         super().__init__(params, learning_rate)
         self.beta1, self.beta2 = betas
+        if not 0.0 <= self.beta1 < 1.0 or not 0.0 <= self.beta2 < 1.0:
+            raise ValueError("Adam betas must each be in [0, 1).")
+        if eps <= 0:
+            raise ValueError("Adam epsilon must be positive.")
+        if weight_decay < 0:
+            raise ValueError("Weight decay cannot be negative.")
         self.eps = eps
         self.weight_decay = weight_decay
-        self.t = 0  # step counter, used for bias correction
+        # Bias correction is per parameter: a parameter may receive its first
+        # gradient several optimizer steps after another parameter.
+        self.steps = [0] * len(self.params)
         self.m = [xp.zeros_like(p.data) for p in self.params]
         self.v = [xp.zeros_like(p.data) for p in self.params]
 
     def step(self):
-        self.t += 1
         for i, p in enumerate(self.params):
             if p.grad is None:
                 continue
+            self.steps[i] += 1
+            t = self.steps[i]
             grad = p.grad
             if self.weight_decay > 0:
                 # Classic (L2) weight decay: folded into the gradient.
@@ -125,8 +136,8 @@ class Adam(Optimizer):
             self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * grad
             self.v[i] = self.beta2 * self.v[i] + (1 - self.beta2) * grad * grad
 
-            m_hat = self.m[i] / (1 - self.beta1 ** self.t)
-            v_hat = self.v[i] / (1 - self.beta2 ** self.t)
+            m_hat = self.m[i] / (1 - self.beta1 ** t)
+            v_hat = self.v[i] / (1 - self.beta2 ** t)
 
             p.data -= self.learning_rate * m_hat / (xp.sqrt(v_hat) + self.eps)
 
@@ -143,17 +154,18 @@ class AdamW(Adam):
     """
 
     def step(self):
-        self.t += 1
         for i, p in enumerate(self.params):
             if p.grad is None:
                 continue
+            self.steps[i] += 1
+            t = self.steps[i]
             grad = p.grad
 
             self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * grad
             self.v[i] = self.beta2 * self.v[i] + (1 - self.beta2) * grad * grad
 
-            m_hat = self.m[i] / (1 - self.beta1 ** self.t)
-            v_hat = self.v[i] / (1 - self.beta2 ** self.t)
+            m_hat = self.m[i] / (1 - self.beta1 ** t)
+            v_hat = self.v[i] / (1 - self.beta2 ** t)
 
             # Decoupled decay: shrink the weight directly...
             if self.weight_decay > 0:

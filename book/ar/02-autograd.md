@@ -189,41 +189,7 @@ for v in reversed(topo):
 <summary><b>كيف يُنفَّذ ذلك</b> — <code>babytorch/engine/tensor.py</code> (كامل <code>backward()</code>، دون اختصار)</summary>
 
 ```python
-    def backward(self, grad=None):
-        """Run backpropagation from this tensor through the whole graph.
-
-        Typically called on a scalar loss::
-
-            loss.backward()
-
-        After it returns, every tensor with ``requires_grad=True`` that
-        contributed to ``loss`` holds ``dloss/dtensor`` in its ``.grad``.
-
-        How it works, in three steps:
-
-        1. Seed the output gradient: ``dloss/dloss = 1``.
-        2. Sort the graph so every tensor comes *after* everything it
-           depends on (a *topological sort*).
-        3. Walk that order in reverse -- from the loss back to the
-           inputs -- asking each operation to convert its output gradient
-           into input gradients (chain rule), and *accumulating* them
-           (a tensor used in several places sums the gradients from all
-           of its uses).
-        """
-        if self.grad is None:
-            if grad is not None:
-                grad = xp.array(grad, dtype=self.data.dtype)
-                assert grad.shape == self.data.shape, (
-                    f"backward() gradient shape {grad.shape} must match "
-                    f"tensor shape {self.data.shape}")
-                self.grad = grad
-            else:
-                self.grad = xp.ones_like(self.data)
-
-        if not self.requires_grad:
-            return
-
-        # -- step 2: topological sort ----------------------------------
+        # -- step 1: topological sort ----------------------------------
         topo = []
         visited = set()
 
@@ -236,6 +202,19 @@ for v in reversed(topo):
                 topo.append(v)
 
         build_topo(self)
+
+        # ...
+
+        # A leaf's gradient accumulates across backward calls, which enables
+        # accumulation over several mini-batches. Intermediate gradients are
+        # scratch space for one traversal and must not retain old paths.
+        if self.operation is None:
+            self.grad = seed if self.grad is None else self.grad + seed
+            return
+        for tensor in topo:
+            if tensor.operation is not None:
+                tensor.grad = None
+        self.grad = seed
 
         # -- step 3: chain rule in reverse order ------------------------
         for v in reversed(topo):

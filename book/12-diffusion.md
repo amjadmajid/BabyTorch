@@ -1,5 +1,17 @@
 # Chapter 12 — Diffusion
 
+*Part IV, chapter 1 of 2. Generation becomes an iterative denoising process
+rather than an autoregressive sequence.*
+
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- distinguish the fixed forward noising process from the learned reverse path;
+- sample any noisy timestep directly using the cumulative noise schedule;
+- derive the noise-prediction training objective; and
+- trace iterative sampling from Gaussian noise to a data sample.
+
 Part II built a generator that works one token at a time: predict the next
 symbol, append it, repeat. That is how language models write. Images want a
 different kind of generator -- and **diffusion** is the one that now draws
@@ -231,6 +243,14 @@ grows convolutions and a U-shape, and the exact same `q_sample`,
 `train_step`, and `p_sample_loop` drive it -- because, as promised, none of
 the diffusion machinery cares whether `x` is a pair of coordinates or a
 28×28 picture.
+
+## Key takeaways
+
+- The forward process is fixed and admits direct sampling at any timestep.
+- Training asks a timestep-conditioned network to predict the noise mixed into
+  a clean sample, producing an ordinary mean-squared-error objective.
+- Generation repeatedly applies a learned reverse update, trading many model
+  evaluations for a flexible way to model complex distributions.
 
 ## Exercises
 

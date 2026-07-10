@@ -4,6 +4,15 @@
 out of tensor operations. This chapter is about what to build: layers,
 models, and the loss functions that give them something to learn.*
 
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- derive the shapes and parameter count of a `Linear` layer;
+- explain why stacked linear layers need non-linear activations;
+- describe how `Module` discovers parameters and switches train/eval mode; and
+- choose an appropriate output layer and loss for regression or classification.
+
 ## A model is a function with knobs
 
 Everything `babytorch.nn` produces is, mathematically, just
@@ -296,6 +305,14 @@ layers.1.b (1, 1)
 
 The model exists and transforms inputs — but its weights are random, so
 its predictions are noise. Making them *not* noise is chapter 4.
+
+## Key takeaways
+
+- A model is a differentiable function whose trainable tensors are parameters.
+- `Module` supplies composition and parameter discovery; layers remain small
+  expressions built from tensor operations.
+- The loss turns task performance into one scalar objective, connecting model
+  design to the gradients used for learning.
 
 ## Exercises
 

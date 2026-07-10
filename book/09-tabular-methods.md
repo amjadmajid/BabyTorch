@@ -1,5 +1,18 @@
 # Chapter 9 — Tabular Reinforcement Learning
 
+*Part III, chapter 1 of 3. We change the source of supervision: an agent
+must learn from delayed rewards produced by its own actions.*
+
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- describe the agent-environment loop, discounted return, and policy;
+- distinguish state values from action values;
+- compare model-based dynamic programming with model-free temporal-difference
+  learning; and
+- explain exploration, bootstrapping, SARSA, and Q-learning.
+
 Every chapter so far learned from a **dataset**: a pile of examples with
 answers attached. A GPT learns from text where the "answer" is the next
 character; a classifier learns from images with labels. The loss compared
@@ -271,6 +284,15 @@ this to the *policy* (learn how to act directly), and chapter 11 does it
 to this chapter's `Q` table (learn what actions are worth). Every idea you
 just met -- return, discount, Bellman target, greedy action, exploration
 -- carries straight over. Only the table changes.
+
+## Key takeaways
+
+- Reinforcement learning replaces labelled examples with trajectories and
+  delayed rewards, making credit assignment central.
+- Bellman equations express value recursively; dynamic programming uses a
+  known environment model, while TD methods learn from sampled transitions.
+- Tables make the algorithms visible but cannot generalize across large state
+  spaces, motivating the neural approximators in Chapters 10 and 11.
 
 ## Exercises
 

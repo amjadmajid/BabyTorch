@@ -1,25 +1,26 @@
-"""PPO: the policy-gradient method everyone actually uses.
+"""PPO: policy optimization with a clipped surrogate objective.
 
 Actor-Critic works, but it is wasteful and twitchy: each batch of
 experience is thrown away after a single gradient step, and nothing stops
 that step from being so large it wrecks the policy. **Proximal Policy
-Optimization** (Schulman et al., 2017) fixes both, and is the workhorse
-behind most modern RL -- including the RLHF that fine-tunes language
-models.
+Optimization** (Schulman et al., 2017) addresses both and remains a widely
+used on-policy baseline. It has also been used in some influential RLHF
+systems, alongside many other preference-optimization approaches.
 
 Two ideas on top of Actor-Critic:
 
 * **The clipped objective.** Track the *ratio* between the new policy and
   the one that collected the data, ``r = pi_new(a|s) / pi_old(a|s)``.
   Multiply it by the advantage, but **clip** it to ``[1-eps, 1+eps]`` so a
-  single update can never move the policy too far. That safety rail lets
-  us...
+  update gains no additional objective value beyond that range. This
+  discourages, but does not mathematically prevent, a large policy move and
+  lets us...
 * **...reuse each batch for several epochs** of minibatch updates, instead
   of one step and throw it away -- far more sample-efficient.
 
 Advantages come from :func:`common.compute_gae` (GAE), a smoother estimate
-than raw returns. This algorithm is not in the original repo -- it is the
-modern capstone on top of its REINFORCE -> A2C progression.
+than raw returns. This algorithm is not in the original repo; it extends the
+REINFORCE -> A2C progression with a practical bounded-update method.
 
     python ppo.py
     python ppo.py --updates 60 --plot ppo.png

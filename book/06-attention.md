@@ -5,6 +5,15 @@ everything that came before. This chapter builds it: self-attention,
 the reason a token can look back at its whole context and decide, for
 itself, what matters.*
 
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- derive the shapes of queries, keys, values, scores, and attention outputs;
+- explain scaled dot-product attention as content-dependent weighted averaging;
+- apply a causal mask and verify that no position reads the future; and
+- show how multiple heads partition the representation and recombine it.
+
 ## Setting the stage: ids become vectors
 
 Chapter 5 left us with batches of token ids, shape `(B, T)` — `B`
@@ -224,6 +233,15 @@ Attention is a big idea, but it is *not* a new primitive.
 Attention lets positions **communicate**. What each position does with
 the information it gathered — and how these layers stack into a
 twelve-story building that stays trainable — is chapter 7.
+
+## Key takeaways
+
+- Queries and keys produce pairwise relevance scores; softmax turns each row
+  into weights used to mix the values.
+- Scaling stabilizes score magnitudes, while the causal mask enforces the
+  information boundary required for autoregressive generation.
+- Multi-head attention runs several learned communication patterns in parallel
+  using the tensor and autograd primitives from Part I.
 
 ## Exercises
 

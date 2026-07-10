@@ -120,13 +120,15 @@ input:  "To be, or not to b"      ->  model  ->  "e"  (probably)
   كلمات مُنفصلة بعضها ببعض. وعند فكّ الترميز، تصير `</w>` مسافةً.
 * **الترميز = إعادة تطبيق عمليات الدمج.** لتجزئة نصّ جديد، قسِّمه إلى محارف
   وطبِّق قواعد الدمج المُتعلَّمة بالترتيب الذي تعلَّمت به. تتقلّص الكلمات الشائعة
-  إلى رموز مُفردة؛ أمّا الكلمة النادرة فتتفكّك بأناقة إلى قِطَع دون الكلمة
-  (subword) — لا إلى `???` أبدًا.
+  إلى رموز مُفردة؛ أمّا الكلمات الأقلّ شيوعًا فتبقى قِطَعًا أصغر. ولأنّ هذا
+  التنفيذ التعليمي يبدأ بالمحارف التي رآها أثناء `fit`، فإنّ ظهور محرف جديد
+  يُنتج خطأً واضحًا بدل أن يُحذَف من النصّ بصمت.
 
-هذه حقًّا الخوارزمية التي تقف خلف مُجزّئات GPT-2/3/4 (تبدأ مُجزّئاتها من
-*البايتات* بدل المحارف وتُضيف تحسينًا كثيفًا، لكنّ حلقة الدمج هي نفسها). ومِقبض
-`vocab_size` يُقايض طول المُتتالية بحجم المُفردات؛ وتستقرّ نماذج الإنتاج عند نحو
-50,000–100,000 رمز.
+هذه هي نواة إجراء الدمج في BPE، وليست نسخةً مطابقة لمُجزّئ GPT إنتاجي. تبدأ
+مُجزّئات GPT الحديثة غالبًا من *البايتات*، وتضيف قواعد دقيقة للتجزئة الأولية
+والرموز الخاصة، وتستخدم تنفيذًا محسّنًا. تضمن تلك الخيارات تغطية أي سلسلة بايتات
+وتغيّر الرموز الناتجة. أمّا `vocab_size` فيُظهر المقايضة الأساسية: مفردات أكبر
+تقصّر المتتالية لكنها توسّع جدولي التضمين والإخراج.
 
 <details>
 <summary><b>كيف يُنفَّذ ذلك</b> — <code>babytorch/text/tokenizers.py</code> (حلقة الدمج، والترميز بإعادة التطبيق)</summary>
@@ -139,6 +141,10 @@ input:  "To be, or not to b"      ->  model  ->  "e"  (probably)
         the model can tell where words end (and doesn't merge across
         spaces).
         """
+        if not isinstance(vocab_size, int) or isinstance(vocab_size, bool):
+            raise TypeError("vocab_size must be an integer.")
+        self.merges = {}
+
         # Represent each unique word as space-separated characters + </w>.
         words = text.split()
         sequences = Counter(' '.join(list(w) + ['</w>']) for w in words)
@@ -148,6 +154,10 @@ input:  "To be, or not to b"      ->  model  ->  "e"  (probably)
         for seq in sequences:
             base.update(seq.split())
         vocab = sorted(base)
+        if vocab_size < len(vocab):
+            raise ValueError(
+                f"vocab_size={vocab_size} is smaller than the base vocabulary "
+                f"of {len(vocab)} symbols.")
 
         while len(vocab) < vocab_size:
             pair_counts = self._get_pair_counts(sequences)

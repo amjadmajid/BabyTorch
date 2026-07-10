@@ -5,6 +5,15 @@ language model's full life cycle — pretrain on a corpus, generate text,
 finetune on a new voice — using the runnable scripts in
 [`tutorials/llm/`](../tutorials/llm/).*
 
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- connect pretraining code to every component developed in Chapters 1-7;
+- interpret language-model loss and compare it with a uniform baseline;
+- explain temperature, top-k, nucleus sampling, and KV caching; and
+- distinguish pretraining, task adaptation, and post-training.
+
 ## Pretraining: the loop meets a mountain of text
 
 [`train.py`](../tutorials/llm/train.py) reads top to bottom as a recap
@@ -221,9 +230,9 @@ Between this 2.7M-parameter model and a frontier LLM lie, honestly:
 about five orders of magnitude of scale (parameters, data, compute);
 engineering for that scale (fused GPU kernels, mixed precision,
 batched serving, training sharded across thousands of devices); and
-post-training — instruction tuning
-and reinforcement learning from human feedback, which is finetuning
-(the kind you just did) aimed at "be helpful" rather than "rhyme".
+post-training -- supervised instruction tuning, preference optimization,
+reinforcement learning, evaluation, and safety work aimed at useful behavior
+rather than only next-token imitation.
 
 What does **not** change is everything this book covered: tensors,
 autograd, cross-entropy, AdamW, attention, residual blocks,
@@ -232,6 +241,15 @@ code for a production Transformer — and you will recognize every part,
 because you have now read a complete one.
 
 Remove the word "baby" and keep going.
+
+## Key takeaways
+
+- Pretraining is the familiar mini-batch loop applied to shifted windows of a
+  large token stream, with validation loss as the main development signal.
+- Generation repeatedly samples a next-token distribution; decoding controls
+  behavior but cannot add knowledge the model did not learn.
+- A KV cache reuses past attention projections during inference, while
+  finetuning continues optimization on a narrower distribution or objective.
 
 ## Exercises
 

@@ -9,7 +9,7 @@ setup(
     author="Amjad Yousef Majid",
     author_email="amjad.y.majid@gmail.com",
     description=("A tiny, readable deep learning framework for education. "
-                 "BabyTorch mirrors the PyTorch API and runs on CPU (NumPy) "
+                 "BabyTorch follows familiar PyTorch conventions and runs on CPU (NumPy) "
                  "or GPU (CuPy), scaling all the way up to a small GPT."),
     long_description=long_description,
     long_description_content_type="text/markdown",

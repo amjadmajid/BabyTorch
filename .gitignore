@@ -18,3 +18,4 @@ graphs/
 
 # Generated book PDFs and pandoc intermediates
 book/build/
+book/output/

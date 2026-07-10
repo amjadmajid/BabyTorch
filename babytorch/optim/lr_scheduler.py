@@ -45,6 +45,10 @@ class StepLR(LRScheduler):
 
     def __init__(self, optimizer, step_size, gamma=0.1):
         super().__init__(optimizer)
+        if step_size <= 0:
+            raise ValueError("step_size must be positive.")
+        if gamma < 0:
+            raise ValueError("gamma cannot be negative.")
         self.step_size = step_size
         self.gamma = gamma
 
@@ -67,7 +71,10 @@ class CosineWarmupLR(LRScheduler):
 
     def __init__(self, optimizer, warmup_steps, total_steps, min_lr=0.0):
         super().__init__(optimizer)
-        assert 0 <= warmup_steps < total_steps
+        if not 0 <= warmup_steps < total_steps:
+            raise ValueError("Expected 0 <= warmup_steps < total_steps.")
+        if not 0 <= min_lr <= self.base_lr:
+            raise ValueError("min_lr must be between 0 and the optimizer's learning rate.")
         self.warmup_steps = warmup_steps
         self.total_steps = total_steps
         self.min_lr = min_lr

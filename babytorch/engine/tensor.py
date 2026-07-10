@@ -129,6 +129,7 @@ class Tensor:
 
     def set_state(self, state):
         self.data = xp.asarray(state['data'])
+        self.dtype = self.data.dtype
         self.grad = None if state['grad'] is None else xp.asarray(state['grad'])
 
     @staticmethod
@@ -372,29 +373,17 @@ class Tensor:
 
         How it works, in three steps:
 
-        1. Seed the output gradient: ``dloss/dloss = 1``.
-        2. Sort the graph so every tensor comes *after* everything it
+        1. Sort the graph so every tensor comes *after* everything it
            depends on (a *topological sort*).
-        3. Walk that order in reverse -- from the loss back to the
+        2. Seed the output gradient (``dloss/dloss = 1``), clearing only
+           intermediate scratch gradients so leaf gradients can accumulate.
+        3. Walk the order in reverse -- from the loss back to the
            inputs -- asking each operation to convert its output gradient
            into input gradients (chain rule), and *accumulating* them
            (a tensor used in several places sums the gradients from all
            of its uses).
         """
-        if self.grad is None:
-            if grad is not None:
-                grad = xp.array(grad, dtype=self.data.dtype)
-                assert grad.shape == self.data.shape, (
-                    f"backward() gradient shape {grad.shape} must match "
-                    f"tensor shape {self.data.shape}")
-                self.grad = grad
-            else:
-                self.grad = xp.ones_like(self.data)
-
-        if not self.requires_grad:
-            return
-
-        # -- step 2: topological sort ----------------------------------
+        # -- step 1: topological sort ----------------------------------
         topo = []
         visited = set()
 
@@ -407,6 +396,29 @@ class Tensor:
                 topo.append(v)
 
         build_topo(self)
+
+        if grad is None:
+            seed = xp.ones_like(self.data)
+        else:
+            seed = xp.asarray(grad, dtype=self.data.dtype)
+            if seed.shape != self.data.shape:
+                raise ValueError(
+                    f"backward() gradient shape {seed.shape} must match "
+                    f"tensor shape {self.data.shape}")
+
+        if not self.requires_grad:
+            return
+
+        # A leaf's gradient accumulates across backward calls, which enables
+        # accumulation over several mini-batches. Intermediate gradients are
+        # scratch space for one traversal and must not retain old paths.
+        if self.operation is None:
+            self.grad = seed if self.grad is None else self.grad + seed
+            return
+        for tensor in topo:
+            if tensor.operation is not None:
+                tensor.grad = None
+        self.grad = seed
 
         # -- step 3: chain rule in reverse order ------------------------
         for v in reversed(topo):
