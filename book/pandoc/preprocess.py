@@ -74,6 +74,10 @@ def main():
         text = f.read()
     text = DETAILS.sub(_convert_details, text)
     text = _strip_nav_footer(text)
+    # The build creates PDF versions of every SVG in build/figures. XeLaTeX
+    # embeds those reliably without depending on pandoc's optional SVG helper.
+    text = re.sub(r"\]\(figures/([^\s)]+)\.svg\)",
+                  r"](figures/\1.pdf)", text)
     sys.stdout.write(text)
 
 

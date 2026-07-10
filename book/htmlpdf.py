@@ -16,6 +16,7 @@ callouts; the code inside them is untouched. Figures resolve relative to
 """
 
 import argparse
+import html as html_module
 import os
 import re
 import sys
@@ -54,44 +55,71 @@ def _boxes(md_text):
 
 
 CSS = """
-@page {{ size: A4; margin: 2cm 2.2cm; }}
-@page {{ @bottom-center {{ content: counter(page); color:#999; font-size:9pt; }} }}
-html {{ font-size: 12pt; }}
+@page {{
+  size: 6in 9in; margin: 0.68in 0.70in 0.74in;
+  @top-center {{ content: string(chapter); color:#777; font-size:7.5pt; }}
+  @bottom-center {{ content: counter(page); color:#777; font-size:8pt; }}
+}}
+@page title {{ @top-center {{ content:none; }} @bottom-center {{ content:none; }} }}
+@page part {{ @top-center {{ content:none; }} @bottom-center {{ content:none; }} }}
+@page :blank {{ @top-center {{ content:none; }} @bottom-center {{ content:none; }} }}
+html {{ font-size: 9.5pt; }}
 body {{ direction: {dir}; font-family: 'Amiri','Noto Naskh Arabic',serif;
-        line-height: 1.75; color:#111; text-align: {align}; }}
+        line-height: 1.58; color:#171717; text-align: {align}; }}
 h1,h2,h3,h4 {{ font-family:'Amiri','Noto Naskh Arabic',serif; line-height:1.35;
-               color:#111; }}
-h1 {{ font-size: 1.9rem; margin-top: 0; page-break-before: always; }}
-h1:first-of-type {{ page-break-before: avoid; }}
-h2 {{ font-size: 1.35rem; border-bottom:1px solid #eee; padding-bottom:2px;
-      margin-top: 1.4em; }}
-h3 {{ font-size: 1.1rem; }}
+               color:#111; break-after:avoid; }}
+h1 {{ font-size: 1.68rem; margin-top: 0; break-before:right;
+      string-set: chapter content(); }}
+h2 {{ font-size: 1.18rem; border-bottom:1px solid #e6e6e6; padding-bottom:2px;
+      margin-top: 1.35em; }}
+h3 {{ font-size: 1.04rem; }}
+p, li {{ orphans:3; widows:3; }}
 /* Code stays left-to-right inside RTL text. */
 pre, code, kbd, samp {{ direction: ltr; unicode-bidi: isolate;
     font-family:'Menlo','DejaVu Sans Mono',monospace; }}
-pre {{ background:#f6f8fa; border:1px solid #eee; border-radius:6px;
-       padding:10px 12px; overflow-x:auto; font-size:9pt; line-height:1.45;
+pre {{ background:#f6f8fa; border:1px solid #e2e5e8; border-radius:4px;
+       padding:7px 8px; overflow-x:auto; font-size:7.2pt; line-height:1.34;
        text-align:left; white-space:pre-wrap; word-wrap:break-word; }}
 code {{ background:#f0f1f2; padding:1px 4px; border-radius:3px; font-size:0.88em; }}
 pre code {{ background:none; padding:0; }}
 .sourcebox, .answerbox {{ border:1px solid #e2e2e2; border-radius:8px;
-    padding:2px 14px; margin:12px 0; background:#fafafa;
-    break-inside: avoid-page; }}
+    padding:2px 11px; margin:10px 0; background:#fafafa; }}
+.answerbox {{ break-inside:avoid-page; }}
 .answerbox {{ background:#f2f7ff; border-color:#dbe6fb; }}
 img {{ max-width:100%; height:auto; display:block; margin:10px auto; }}
 a {{ color:#2a5db0; text-decoration:none; }}
-table {{ border-collapse:collapse; margin:10px 0; font-size:0.95em; }}
+table {{ border-collapse:collapse; margin:10px 0; font-size:0.90em; }}
 th,td {{ border:1px solid #ccc; padding:5px 9px; text-align:{align}; }}
 th {{ background:#f4f4f4; }}
 blockquote {{ border-inline-start:3px solid #ddd; margin-inline-start:0;
               padding-inline-start:12px; color:#444; }}
-.title-page {{ text-align:center; margin-top:35%; page-break-after:always; }}
-.title-page h1 {{ page-break-before: avoid; font-size:2.6rem; border:none; }}
+.title-page {{ page:title; text-align:center; padding-top:32%; break-after:page; }}
+.title-page h1 {{ break-before:auto; string-set:none; font-size:2.6rem; border:none; }}
 .title-page .sub {{ color:#555; font-size:1.1rem; margin-top:0.5em; }}
 .title-page .author {{ margin-top:2em; font-size:1.1rem; }}
 .title-page .email {{ margin-top:0.3em; font-size:0.95rem; color:#666;
                       direction:ltr; }}
+.copyright {{ page:title; break-after:page; padding-top:56%; color:#555;
+              font-size:0.86rem; }}
+.toc {{ break-after:right; }}
+.toc h1 {{ break-before:auto; string-set:none; }}
+.toc h2 {{ border:0; margin-top:1em; }}
+.toc ol {{ list-style:none; padding:0; }}
+.toc li {{ margin:0.3em 0; }}
+.toc a {{ color:#222; display:block; }}
+.toc a::after {{ content: leader('.') target-counter(attr(href), page); }}
+.part-page {{ page:part; break-before:right; break-after:page; text-align:center;
+              padding-top:42%; }}
+.part-page h1 {{ break-before:auto; string-set:none; font-size:2.25rem; }}
 """
+
+
+PARTS_AR = {
+    1: ("الجزء الأول", "المحرّك"),
+    5: ("الجزء الثاني", "BabyGPT"),
+    9: ("الجزء الثالث", "التعلّم المعزّز"),
+    12: ("الجزء الرابع", "الانتشار"),
+}
 
 
 def main():
@@ -113,14 +141,46 @@ def main():
     parts = [f'<div class="title-page"><h1>{args.title}</h1>'
              f'<div class="sub">{args.subtitle}</div>'
              f'<div class="author">{args.author}</div>'
-             f'<div class="email">{args.email}</div></div>']
-    for name in chapters:
+             f'<div class="email">{args.email}</div>'
+             f'<div class="author">الطبعة الأولى · يوليو 2026</div></div>',
+             '<div class="copyright">حقوق النشر © 2026 أمجد يوسف مجيد.<br>'
+             'يُوزَّع هذا الكتاب والشفرة المصدرية وفق رخصة MIT المرفقة بالمستودع.'
+             '<br><span dir="ltr">github.com/amjadmajid/BabyTorch</span></div>']
+
+    rendered = []
+    titles = []
+    for number, name in enumerate(chapters, 1):
         with open(os.path.join(args.srcdir, name), encoding="utf-8") as f:
             text = f.read()
+        title_match = re.search(r"^#\s+(.+)$", text, re.M)
+        title = title_match.group(1).strip() if title_match else name
         text = NAV.sub("", text)          # drop per-chapter nav footers
         text = _boxes(text)
         md.reset()
-        parts.append(md.convert(text))
+        chapter = md.convert(text)
+        chapter = re.sub(r"<h1>(.*?)</h1>",
+                         rf'<h1 id="chapter-{number}">\1</h1>',
+                         chapter, count=1, flags=re.S)
+        titles.append((number, title))
+        rendered.append((number, chapter))
+
+    toc = ['<nav class="toc"><h1>المحتويات</h1>']
+    for start, (part_label, part_title) in PARTS_AR.items():
+        toc.append(f'<h2>{part_label}: {part_title}</h2><ol>')
+        next_start = next((n for n in PARTS_AR if n > start), len(chapters) + 1)
+        for number, title in titles:
+            if start <= number < next_start:
+                toc.append(f'<li><a href="#chapter-{number}">{html_module.escape(title)}</a></li>')
+        toc.append('</ol>')
+    toc.append('</nav>')
+    parts.append(''.join(toc))
+
+    for number, chapter in rendered:
+        if number in PARTS_AR:
+            part_label, part_title = PARTS_AR[number]
+            parts.append(f'<section class="part-page"><div>{part_label}</div>'
+                         f'<h1>{part_title}</h1></section>')
+        parts.append(chapter)
 
     direction = "rtl" if args.rtl else "ltr"
     align = "right" if args.rtl else "left"

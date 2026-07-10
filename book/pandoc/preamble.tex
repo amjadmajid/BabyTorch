@@ -1,5 +1,47 @@
-% Raw LaTeX preamble shared by the English and Arabic builds.
-% Included verbatim via pandoc --include-in-header (NOT processed as Markdown).
+% Print interior for the English 6x9-inch edition.
+% Included verbatim via pandoc --include-in-header.
+
+\usepackage{microtype}
+\usepackage{fancyhdr}
+\usepackage{bookmark}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{etoolbox}
+\usepackage{xcolor}
+\usepackage{emptypage}
+
+\hypersetup{
+  pdftitle={BabyTorch},
+  pdfauthor={Dr. Amjad Yousef Majid},
+  pdfsubject={An educational deep learning framework, from autograd to GPTs, reinforcement learning, and diffusion},
+  pdfkeywords={deep learning, autograd, transformer, GPT, reinforcement learning, diffusion}
+}
+
+\linespread{1.04}
+\setlength{\parindent}{1.1em}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{2.5em}
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\raggedbottom
+\setcounter{tocdepth}{1}
+\setlist{itemsep=0.2em,topsep=0.45em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\thepage}
+\fancyhead[RO]{\small\thepage}
+\fancyhead[RE]{\small\textsc{BabyTorch}}
+\fancyhead[LO]{\small\nouppercase{\leftmark}}
+\renewcommand{\headrulewidth}{0.35pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\small\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+\captionsetup{font=small,labelfont=bf,skip=6pt}
 
 % pandoc >= 3.1 emits an `alt=` key on \includegraphics (image alt text, for
 % accessible/tagged PDF); this TeX Live's graphicx doesn't know it -> make the
@@ -12,6 +54,7 @@
 % Wrap long code lines instead of letting them overflow the page.
 \usepackage{fvextra}
 \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,breakanywhere,commandchars=\\\{\}}
+\AtBeginEnvironment{Highlighting}{\small}
 
 % A few rare Unicode glyphs that not every text font carries -> safe fallbacks,
 % so the book's inline math never renders as tofu (missing-glyph boxes).
@@ -24,7 +67,9 @@
 \newunicodechar{₁}{\textsubscript{1}}
 \newunicodechar{ₛ}{\textsubscript{s}}
 \newunicodechar{ᵀ}{\textsuperscript{T}}
+\newunicodechar{⁹}{\textsuperscript{9}}
 \newunicodechar{ᾱ}{\ensuremath{\bar{\alpha}}}
+\newunicodechar{ε}{\ensuremath{\varepsilon}}
 \newunicodechar{⋯}{\ensuremath{\cdots}}
 % Arrows and relations STIX Two Text (the text cut) lacks -> math equivalents.
 \newunicodechar{→}{\ensuremath{\rightarrow}}
