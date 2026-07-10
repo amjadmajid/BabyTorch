@@ -1,7 +1,7 @@
 """BabyTorch: a tiny deep learning framework you can read in an afternoon.
 
-The public API mirrors PyTorch so that everything you learn here
-transfers directly:
+The small public API follows familiar PyTorch conventions so the core
+concepts and training-loop structure transfer cleanly:
 
     import babytorch
     import babytorch.nn as nn

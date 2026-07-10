@@ -63,8 +63,9 @@ For the concepts behind every line (autograd, MSE, SGD), see
 
 ## The PyTorch equivalent
 
-BabyTorch deliberately mirrors PyTorch, so the port is nearly mechanical
-— activations become separate layers, `learning_rate` becomes `lr`:
+BabyTorch follows PyTorch's training-loop conventions, so this small example
+ports with only a few API changes — activations become separate layers and
+`learning_rate` becomes `lr`:
 
 ```python
 import torch.nn as nn

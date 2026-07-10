@@ -4,6 +4,15 @@
 model weights, gradients — is stored in one data structure. This chapter
 is about that structure.*
 
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- read tensor shapes as descriptions of the data they organize;
+- predict the result of reshaping, matrix multiplication, and broadcasting;
+- explain how BabyTorch routes the same operations to CPU or GPU arrays; and
+- identify the graph metadata that turns an array into an autograd tensor.
+
 ## One idea: a block of numbers with a shape
 
 A **tensor** is an n-dimensional array: a block of numbers plus a
@@ -41,11 +50,12 @@ n = babytorch.arange(0, 10, 2)    # 0., 2., 4., 6., 8.
 babytorch.manual_seed(42)         # make the random ones reproducible
 ```
 
-Elements are `float32` by default, exactly like PyTorch — deep learning
-rarely needs more precision, and smaller numbers mean faster math. (One
-spot this is *more* consistent than PyTorch: `torch.arange(0, 10, 2)`
-keeps an integer dtype because its arguments are integers, while
-`babytorch.arange` always returns `float32`, like every factory above.)
+BabyTorch's public factory functions create `float32` tensors by default.
+That is the common training dtype for this project: it uses half the memory
+of `float64`, and many accelerators execute it faster. PyTorch is more
+dtype-sensitive: for example, `torch.arange(0, 10, 2)` returns integers,
+whereas `babytorch.arange` converts the result to `float32`. Appendix A lists
+the API differences to remember when moving between the frameworks.
 
 **Try it**
 
@@ -309,6 +319,14 @@ recorded step at a time.
 
 That is chapter 2.
 
+## Key takeaways
+
+- A tensor is an array whose shape carries the organization of the data.
+- Vectorized operations and broadcasting express batched computation without
+  Python loops; broadcasting in the forward pass implies summation backward.
+- BabyTorch adds gradient metadata to backend arrays, creating the links that
+  Chapter 2 will traverse as a computation graph.
+
 ## Exercises
 
 **Check yourself** (a minute each — answers unfold):
@@ -339,10 +357,10 @@ precise `float64`?
 
 <details><summary>Answer</summary>
 
-Half the memory and twice the throughput, and gradient descent is
-noisy anyway — batch noise dwarfs the extra rounding error, so the
-precision would buy nothing. (Frontier models go *lower* still:
-16-bit and below.)
+It uses half the memory of `float64` and is usually faster on training
+hardware, while providing enough precision for the examples in this book.
+The exact speedup and acceptable precision depend on the device, operation,
+and model; production training often mixes 32-bit and lower-precision formats.
 
 </details>
 

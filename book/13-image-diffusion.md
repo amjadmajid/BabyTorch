@@ -1,5 +1,17 @@
 # Chapter 13 — Image diffusion
 
+*Part IV, chapter 2 of 2. The diffusion objective stays fixed while a U-Net
+gives the denoiser spatial structure and multi-scale context.*
+
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- explain why image denoisers need both local detail and global context;
+- trace encoder, bottleneck, decoder, and skip paths through a small U-Net;
+- describe spatial and timestep conditioning; and
+- connect pixel-space diffusion to latent and text-conditioned systems.
+
 Chapter 12 taught a plain MLP the shape of a 2-D cloud. The recipe --
 `q_sample`, `train_step`, `p_sample_loop` -- does not change at all when the
 data becomes an image. What changes is the denoiser's *eyes*. A picture is
@@ -193,6 +205,15 @@ token at a time and the generator that resolves an image out of noise are
 built from the same parts you have now seen every line of -- tensors and
 `backward()`, `Conv2D` and attention, `Adam` and a training loop. Different
 games, one machine.
+
+## Key takeaways
+
+- A U-Net expands receptive field by downsampling, then restores resolution
+  while skip paths recover fine spatial information.
+- The same timestep embedding can condition every scale of the network, and
+  the diffusion loss remains unchanged when the denoiser architecture changes.
+- Latent diffusion and text conditioning extend the same reverse process with
+  compressed representations and cross-attended context.
 
 ## Exercises
 

@@ -4,6 +4,15 @@
 Part II points it at language. First problem: neural networks eat
 numbers, and we have text.*
 
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- explain next-token prediction as multi-class classification;
+- compare character tokenization with merge-based subword tokenization;
+- trace a BPE merge and identify the limits of this teaching tokenizer; and
+- construct shifted input/target windows from an encoded corpus.
+
 ## What a language model actually does
 
 Strip away the mystique and a language model is a classifier from
@@ -127,14 +136,18 @@ Two details worth noticing:
   separate words together. When decoding, `</w>` becomes a space.
 * **Encoding = replaying the merges.** To tokenize new text, split it
   into characters and apply the learned merge rules in the order they
-  were learned. Common words collapse into single tokens; a rare word
-  degrades gracefully into subword pieces — never into `???`.
+  were learned. Common words collapse into single tokens and less common
+  words stay in smaller pieces. Because this teaching implementation starts
+  from characters observed during `fit`, a genuinely new character raises
+  an error rather than silently disappearing.
 
-This is genuinely the algorithm behind GPT-2/3/4's tokenizers (theirs
-start from *bytes* rather than characters and add heavy optimization,
-but the merge loop is the same). The `vocab_size` knob trades sequence
-length against vocabulary size; production models settle around
-50,000–100,000 tokens.
+This is the core merge procedure introduced for subword modelling, not a
+reproduction of a production GPT tokenizer. GPT-family tokenizers commonly
+start from bytes, specify pre-tokenization and special-token rules, and use
+optimized implementations. Those choices guarantee coverage of arbitrary
+byte strings and affect the exact tokens. The `vocab_size` knob still exposes
+the central trade-off: larger vocabularies shorten sequences but enlarge the
+embedding and output tables.
 
 <details>
 <summary><b>How it's implemented</b> — <code>babytorch/text/tokenizers.py</code> (the merge loop, and encoding by replay)</summary>
@@ -147,6 +160,10 @@ length against vocabulary size; production models settle around
         the model can tell where words end (and doesn't merge across
         spaces).
         """
+        if not isinstance(vocab_size, int) or isinstance(vocab_size, bool):
+            raise TypeError("vocab_size must be an integer.")
+        self.merges = {}
+
         # Represent each unique word as space-separated characters + </w>.
         words = text.split()
         sequences = Counter(' '.join(list(w) + ['</w>']) for w in words)
@@ -156,6 +173,10 @@ length against vocabulary size; production models settle around
         for seq in sequences:
             base.update(seq.split())
         vocab = sorted(base)
+        if vocab_size < len(vocab):
+            raise ValueError(
+                f"vocab_size={vocab_size} is smaller than the base vocabulary "
+                f"of {len(vocab)} symbols.")
 
         while len(vocab) < vocab_size:
             pair_counts = self._get_pair_counts(sequences)
@@ -240,6 +261,15 @@ move will be to swap each id for a learned *vector* that can carry
 meaning (chapter 3's `Embedding`). What happens after that — how
 position 7 gets to consult positions 0–6 before making its guess — is
 the architecture that changed everything.
+
+## Key takeaways
+
+- A tokenizer defines the discrete vocabulary and the mapping between text and
+  token ids.
+- BabyTorch's BPE exposes the merge algorithm, but production GPT tokenizers
+  operate on bytes and add carefully specified pre-tokenization rules.
+- Next-token targets come from shifting the same token stream, so raw text
+  supplies its own training labels.
 
 ## Exercises
 

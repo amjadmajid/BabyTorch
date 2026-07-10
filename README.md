@@ -5,7 +5,7 @@
 
 ## Introduction
 
-BabyTorch is a lightweight, educational deep learning framework that mirrors the PyTorch API with a minimal, readable implementation — small enough to read in an afternoon, capable enough to train a small GPT. It runs on CPU (NumPy) out of the box and on NVIDIA GPUs (CuPy) with zero code changes. Everything you learn here transfers directly to PyTorch.
+BabyTorch is a lightweight educational deep learning framework with a small, readable API shaped by PyTorch conventions — compact enough to study end to end and capable enough to train a small GPT. It runs on CPU (NumPy) out of the box and on NVIDIA GPUs (CuPy) without changing model code. The core concepts transfer directly; the book's migration appendix explains the API differences that remain.
 
 ```python
 import babytorch
@@ -62,7 +62,7 @@ The repository ships with a short book that explains the whole codebase in order
 * **[Part III — Reinforcement learning](book/README.md):** the agent–environment loop, policy gradients (REINFORCE, Actor-Critic, PPO), and Deep Q-Learning.
 * **[Part IV — Diffusion](book/README.md):** generation by denoising — the forward/reverse processes and the predict-the-noise loss, a 2-D toy, and a convolutional U-Net that denoises MNIST.
 
-Each chapter links to the exact source files it explains. Start at [`book/README.md`](book/README.md). The book is also available as an [Arabic edition](book/ar/README.md) (النسخة العربية) and builds to **PDF** in both languages — see [`book/BUILD.md`](book/BUILD.md).
+Each chapter links to the exact source files it explains. Start at [`book/README.md`](book/README.md). The book is also available as an [Arabic edition](book/ar/README.md) (النسخة العربية) and builds to print-ready **6×9-inch PDF interiors** in both languages — see [`book/BUILD.md`](book/BUILD.md).
 
 ## Tutorials
 
@@ -124,7 +124,7 @@ The framework is built around one separation of concerns, kept everywhere:
 │   ├── text                  # CharTokenizer, BPETokenizer
 │   ├── datasets              # DataLoader, MNIST, Tiny Shakespeare
 │   └── visualization         # loss curves, graph drawing
-├── book                      # the BabyTorch book (Parts I–III)
+├── book                      # the BabyTorch book (Parts I–IV + appendices)
 ├── tests                     # pytest suite (CPU and GPU)
 └── tutorials
     ├── classification        # binary, multi-class, MNIST

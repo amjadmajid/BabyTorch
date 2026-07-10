@@ -4,20 +4,29 @@
 through a codebase small enough to actually read.*
 
 > **Also available:** an [Arabic edition](ar/README.md) — النسخة العربية —
-> and a [PDF build](BUILD.md) of both languages (`./build.sh en` / `ar`).
+> and print-ready [PDF builds](BUILD.md) of both languages
+> (`./build.sh en` / `ar`).
 
-BabyTorch is a working deep learning framework in roughly two thousand
-lines of commented Python. It mirrors the PyTorch API, runs on CPU
+BabyTorch is a working deep learning framework in roughly three thousand
+lines of commented core Python. Its small API follows familiar PyTorch
+conventions, runs on CPU
 (NumPy) or GPU (CuPy), and is capable enough to train a small GPT that
 writes Shakespeare-flavoured text. This book is the guided tour: it
 walks through the ideas in the same order the code builds them up, and
 every chapter links to the real source files so you can check each claim
 against the implementation.
 
-**The promise:** if you can read Python, then by the end of Part II
-there will be no magic left — not in `backward()`, not in `Adam`, not in
-attention. You will have seen every moving part of a working language
-model.
+**The promise:** if you can read Python, then by the end of Part II you will
+be able to trace `backward()`, AdamW, attention, and generation through a
+complete working language model instead of treating them as black boxes.
+
+Start with the [Preface](preface.md), or install the project and open
+[Chapter 1](01-tensors.md):
+
+```bash
+pip install -e .
+pytest -q
+```
 
 ## How to read this book
 
@@ -68,7 +77,7 @@ input". Everything else is introduced when it is needed.
 
 | Chapter | What you will understand |
 |---------|--------------------------|
-| [5. Tokenization](05-tokenization.md) | How text becomes numbers: character tokenizers, Byte Pair Encoding (the GPT approach), and where next-token training pairs come from. |
+| [5. Tokenization](05-tokenization.md) | How text becomes numbers: character tokenizers, a compact BPE teaching implementation, and where next-token training pairs come from. |
 | [6. Attention](06-attention.md) | The mechanism that made large language models possible: queries, keys, values, the causal mask, and multiple heads. |
 | [7. The Transformer](07-transformer.md) | Assembling attention and MLPs into blocks, and blocks into a GPT — residuals, LayerNorm, and the output head. |
 | [8. Training a GPT](08-training-a-gpt.md) | Pretraining on raw text, generating with temperature and top-k, and finetuning the result on a new corpus. |
@@ -85,7 +94,7 @@ game, and a reward to maximise.*
 | Chapter | What you will understand |
 |---------|--------------------------|
 | [9. Tabular reinforcement learning](09-tabular-methods.md) | The agent–environment loop, the return and the Bellman equation — on a grid small enough that the agent's knowledge fits in a table: value/policy iteration (model-based) and SARSA/Q-learning (model-free). |
-| [10. Policy gradients](10-policy-gradients.md) | Swap the table for a network that chooses actions directly: REINFORCE, a learned value baseline (Actor-Critic), and the clipped objective of PPO — the algorithm behind RLHF. |
+| [10. Policy gradients](10-policy-gradients.md) | Swap the table for a network that chooses actions directly: REINFORCE, a learned value baseline (Actor-Critic), and PPO's clipped surrogate objective. |
 | [11. Deep Q-Learning](11-deep-q-learning.md) | The other road: learn `Q(s, a)` with a network and act greedily on it. Experience replay, target networks, and the same DQN playing Snake — first with hand-built features, then with convolutions. |
 
 Part III has a companion too: the [RL
@@ -93,7 +102,8 @@ tutorial](../tutorials/rl/README.md) trains all four agents on GridWorld
 and Snake with the exact code these chapters explain. It ports the
 PyTorch agents from
 [deep-reinforcement-learning-games-from-scratch](https://github.com/amjadmajid/deep-reinforcement-learning-games-from-scratch)
-onto BabyTorch — nearly a rename, because BabyTorch mirrors PyTorch.
+onto BabyTorch; the structural similarity shows which concepts transfer, while
+Appendix A records the API differences that still matter.
 
 ## Part IV — Diffusion
 
@@ -108,6 +118,14 @@ pure noise and cleaning it up into a sample.*
 Part IV has a companion too: the [diffusion
 tutorial](../tutorials/diffusion/README.md) trains both models — the 2-D toy
 and the MNIST U-Net — with the exact code these chapters explain.
+
+## Appendices and reference
+
+- [From BabyTorch to PyTorch](appendix-a-pytorch.md) -- direct translations,
+  important differences, and a migration checklist.
+- [Glossary](glossary.md) -- concise definitions of the book's recurring terms.
+- [References and further reading](references.md) -- the primary papers behind
+  the main algorithms.
 
 ## The map of the code
 

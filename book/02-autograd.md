@@ -4,6 +4,15 @@
 framework. After this chapter, `loss.backward()` is not magic — it is a
 recording, played in reverse.*
 
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- apply the chain rule to a graph of elementary tensor operations;
+- explain the `forward`/`backward` contract implemented by each operation;
+- trace reverse-mode autodiff through a topological ordering; and
+- use finite differences to check an analytic gradient.
+
 ## Why gradients?
 
 A neural network is a function with millions of adjustable numbers
@@ -142,10 +151,7 @@ in mind and the whole engine fits in your head.
 `Tensor.backward()` (in
 [`tensor.py`](../babytorch/engine/tensor.py)) does three things:
 
-**1. Seed.** The gradient of the loss with respect to itself is 1:
-`self.grad = ones_like(self.data)`.
-
-**2. Topologically sort** the graph — list every tensor so that each
+**1. Topologically sort** the graph — list every tensor so that each
 one appears *after* all tensors it depends on. A depth-first walk from
 the loss does it in a few lines:
 
@@ -159,7 +165,12 @@ def build_topo(v):
         topo.append(v)
 ```
 
-**3. Replay in reverse.** Walk that list backwards — from the loss
+**2. Prepare gradients.** Seed the output with the supplied gradient, or
+ones when none is supplied. Clear intermediate gradients from an earlier
+traversal, but preserve leaf gradients: accumulating leaves is what lets a
+training loop combine gradients from several mini-batches deliberately.
+
+**3. Replay in reverse.** Walk the list backwards — from the loss
 toward the inputs — and let every operation convert its output gradient
 into input gradients:
 
@@ -181,44 +192,10 @@ complete. That is the entire algorithm — *backpropagation is a
 topological sort plus the chain rule.*
 
 <details>
-<summary><b>How it's implemented</b> — <code>babytorch/engine/tensor.py</code> (the whole of <code>backward()</code>, unabridged)</summary>
+<summary><b>How it's implemented</b> — <code>babytorch/engine/tensor.py</code> (the core of <code>backward()</code>)</summary>
 
 ```python
-    def backward(self, grad=None):
-        """Run backpropagation from this tensor through the whole graph.
-
-        Typically called on a scalar loss::
-
-            loss.backward()
-
-        After it returns, every tensor with ``requires_grad=True`` that
-        contributed to ``loss`` holds ``dloss/dtensor`` in its ``.grad``.
-
-        How it works, in three steps:
-
-        1. Seed the output gradient: ``dloss/dloss = 1``.
-        2. Sort the graph so every tensor comes *after* everything it
-           depends on (a *topological sort*).
-        3. Walk that order in reverse -- from the loss back to the
-           inputs -- asking each operation to convert its output gradient
-           into input gradients (chain rule), and *accumulating* them
-           (a tensor used in several places sums the gradients from all
-           of its uses).
-        """
-        if self.grad is None:
-            if grad is not None:
-                grad = xp.array(grad, dtype=self.data.dtype)
-                assert grad.shape == self.data.shape, (
-                    f"backward() gradient shape {grad.shape} must match "
-                    f"tensor shape {self.data.shape}")
-                self.grad = grad
-            else:
-                self.grad = xp.ones_like(self.data)
-
-        if not self.requires_grad:
-            return
-
-        # -- step 2: topological sort ----------------------------------
+        # -- step 1: topological sort ----------------------------------
         topo = []
         visited = set()
 
@@ -231,6 +208,19 @@ topological sort plus the chain rule.*
                 topo.append(v)
 
         build_topo(self)
+
+        # ...
+
+        # A leaf's gradient accumulates across backward calls, which enables
+        # accumulation over several mini-batches. Intermediate gradients are
+        # scratch space for one traversal and must not retain old paths.
+        if self.operation is None:
+            self.grad = seed if self.grad is None else self.grad + seed
+            return
+        for tensor in topo:
+            if tensor.operation is not None:
+                tensor.grad = None
+        self.grad = seed
 
         # -- step 3: chain rule in reverse order ------------------------
         for v in reversed(topo):
@@ -347,6 +337,16 @@ operations in this chapter differentiates automatically. That
 composability is the payoff of the design, and it is the only reason
 chapter 7 can build a GPT without writing a single line of gradient
 code.
+
+## Key takeaways
+
+- Reverse-mode autodiff records small forward operations, then composes their
+  local derivatives from one output back to many parameters.
+- Topological order ensures that every path's contribution reaches a tensor
+  before its gradient is propagated farther backward.
+- Leaf gradients accumulate deliberately; intermediate gradients are scratch
+  values for one traversal, and finite differences provide an independent
+  correctness check.
 
 ## Exercises
 

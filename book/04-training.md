@@ -5,6 +5,15 @@ differentiates. This chapter closes the loop — literally: the four-step
 loop that turns random weights into a trained network, and the
 optimizers that make it fast.*
 
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- write and diagnose the complete forward-loss-backward-update loop;
+- distinguish full-batch, stochastic, and mini-batch gradient estimates;
+- explain momentum, Adam, AdamW, and learning-rate scheduling; and
+- use training and validation curves to recognize underfitting and overfitting.
+
 ## Gradient descent in one picture
 
 After `loss.backward()`, every parameter holds `dLoss/dparameter` — the
@@ -152,17 +161,18 @@ practice — this is what GPTs train with, including ours in chapter 8.
             p.data -= self.learning_rate * grad
     # ...
     def step(self):
-        self.t += 1
         for i, p in enumerate(self.params):
             if p.grad is None:
                 continue
+            self.steps[i] += 1
+            t = self.steps[i]
             grad = p.grad
 
             self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * grad
             self.v[i] = self.beta2 * self.v[i] + (1 - self.beta2) * grad * grad
 
-            m_hat = self.m[i] / (1 - self.beta1 ** self.t)
-            v_hat = self.v[i] / (1 - self.beta2 ** self.t)
+            m_hat = self.m[i] / (1 - self.beta1 ** t)
+            v_hat = self.v[i] / (1 - self.beta2 ** t)
 
             # Decoupled decay: shrink the weight directly...
             if self.weight_decay > 0:
@@ -205,7 +215,10 @@ full speed, then a smooth cosine descent.
 ```python
     def __init__(self, optimizer, warmup_steps, total_steps, min_lr=0.0):
         super().__init__(optimizer)
-        assert 0 <= warmup_steps < total_steps
+        if not 0 <= warmup_steps < total_steps:
+            raise ValueError("Expected 0 <= warmup_steps < total_steps.")
+        if not 0 <= min_lr <= self.base_lr:
+            raise ValueError("min_lr must be between 0 and the optimizer's learning rate.")
         self.warmup_steps = warmup_steps
         self.total_steps = total_steps
         self.min_lr = min_lr
@@ -280,6 +293,15 @@ For larger worked examples, see
 digits with convolutions), and
 [`tests/test_training.py`](../tests/test_training.py) — the end-to-end
 proofs that this loop works, including a tiny GPT.
+
+## Key takeaways
+
+- Training repeatedly measures a scalar loss, differentiates it, and updates
+  parameters in the direction expected to reduce future loss.
+- Optimizers change the update rule, while schedules change its scale over
+  time; neither replaces the need for a sound objective and representative data.
+- Validation data estimates generalization and must remain outside parameter
+  updates; repeated tuning against it can still overfit the development process.
 
 ## Exercises
 

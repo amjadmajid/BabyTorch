@@ -4,6 +4,15 @@
 the architecture behind GPT-2, GPT-4 and LLaMA — and see why a
 24-layer-deep stack of it can be trained at all.*
 
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- explain the complementary roles of attention and the position-wise MLP;
+- trace pre-normalization residual blocks through a decoder-only Transformer;
+- derive the shapes of embeddings, blocks, logits, and flattened loss inputs;
+- estimate where a GPT's parameters are stored.
+
 ## The other half: the MLP
 
 Attention moves information *between* positions. It is followed by a
@@ -219,6 +228,15 @@ buy:
 
 Random weights, so the scores are noise — the model babbles. Chapter 8
 turns the babble into Shakespeare.
+
+## Key takeaways
+
+- A decoder block alternates communication through attention with independent
+  per-position processing through an MLP.
+- Residual paths and normalization make deep composition trainable while
+  preserving a direct route for signals and gradients.
+- The complete GPT maps token ids to one logit vector per position; training
+  still uses the cross-entropy machinery introduced in Chapter 3.
 
 ## Exercises
 

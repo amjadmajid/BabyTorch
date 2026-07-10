@@ -1,5 +1,17 @@
 # Chapter 10 — Policy Gradients
 
+*Part III, chapter 2 of 3. The table becomes a neural policy trained from
+sampled returns.*
+
+## Learning goals
+
+By the end of this chapter, you will be able to:
+
+- derive the REINFORCE loss from log-probabilities and sampled returns;
+- explain how baselines reduce variance without changing the expected gradient;
+- distinguish actor and critic roles; and
+- explain PPO's probability ratio and clipped surrogate objective.
+
 Chapter 9 solved GridWorld with a **table**: one number per state, filled
 in by the Bellman equation. That works because GridWorld has a couple of
 dozen states you can list. It is hopeless the moment the state is an
@@ -19,9 +31,10 @@ Everything else you already have -- `Linear`, `Adam`, `log_softmax`,
 `backward()`. In fact this chapter and the next are a port of a separate
 PyTorch project,
 [deep-reinforcement-learning-games-from-scratch](https://github.com/amjadmajid/deep-reinforcement-learning-games-from-scratch),
-onto BabyTorch -- and the port is nearly a rename, because BabyTorch
-mirrors PyTorch. That is the subtext of Part III: if you can build a
-classifier, you can build an agent.
+onto BabyTorch. The training-loop structure transfers closely even though the
+framework APIs are not identical. That is the subtext of Part III: if you can
+build a classifier, you already know most of the machinery needed to build an
+agent.
 
 We stay with **GridWorld** from chapter 9 -- every step costs `-1` and
 reaching the goal pays a `+10` bonus, so the return `G = r₀ + γ r₁ + γ²
@@ -162,19 +175,20 @@ The critic is trained by plain regression -- MSE against the returns it is
 trying to predict, exactly the loss from chapter 3. The actor uses the
 critic's verdict as a smarter baseline. Same policy gradient; less noise.
 
-## PPO: the one everyone actually uses
+## PPO: bounded policy updates
 
 Actor-Critic works but is wasteful and fragile: each batch of hard-won
 experience powers a single gradient step and is thrown away, and nothing
 stops that step from being so large it destroys the policy.
 
-**Proximal Policy Optimization** fixes both, and is the workhorse behind
-most modern RL -- including the RLHF that aligns language models (the
-"reward" there is a human-preference model, but the algorithm is this
-one). Its trick is the **clipped objective**. Track the ratio between the
-new policy and the one that collected the data, `r = π_new / π_old`, and
-clip it to `[1−ε, 1+ε]` so a single update can never move the policy too
-far:
+**Proximal Policy Optimization** addresses both problems and became a widely
+used on-policy baseline in robotics, games, and some language-model
+post-training systems. It is not synonymous with RLHF: preference-based
+post-training can use PPO or other policy optimization and direct-preference
+methods. PPO's central device is the **clipped surrogate objective**. Track
+the ratio between the new policy and the one that collected the data,
+`r = π_new / π_old`, then clip the objective's incentive outside
+`[1−ε, 1+ε]`:
 
 <details>
 <summary><b>How it's implemented</b> — <code>tutorials/rl/ppo.py</code> (the clipped surrogate objective)</summary>
@@ -196,8 +210,9 @@ far:
 
 </details>
 
-That safety rail is what lets PPO **reuse each batch for several epochs**
-of minibatch updates instead of one -- far more sample-efficient. (The
+This discourages, but does not mathematically forbid, an excessively large
+policy change. In practice it lets PPO **reuse each batch for several epochs**
+of minibatch updates instead of one. (The
 `clip_tensor` and `minimum` are elementwise, differentiable, and built
 from `relu` -- BabyTorch's `Tensor.max` only reduces along an axis, so
 [`common.py`](../tutorials/rl/common.py) makes the elementwise versions
@@ -219,6 +234,14 @@ an "agent" is a network trained by a slightly unusual loss. The
 [tutorial README](../tutorials/rl/README.md) has the full table; the next
 chapter takes the *other* road -- learning values instead of a policy --
 and uses it to play Snake.
+
+## Key takeaways
+
+- Policy gradients increase the log-probability of actions in proportion to
+  an estimate of how advantageous those actions were.
+- A learned value baseline reduces variance and creates the actor-critic split.
+- PPO reuses on-policy data for several bounded updates; it is influential and
+  practical, but it is one member of a broader family of policy optimizers.
 
 ## Exercises
 
